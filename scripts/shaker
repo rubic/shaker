@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+"""
+This script is used to launch and terminate ec2 salt minions
+"""
+
+import os
+import shaker
+
+def main():
+    """
+    The main function
+    """
+    s = shaker.EBSFactory()
+    s.process()
+
+if __name__ == '__main__':
+    main()
