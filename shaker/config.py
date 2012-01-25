@@ -13,14 +13,42 @@ try:
 except:
     pass
 
-DEFAULT_CONFIG_FILENAME = 'default.cfg'
+import shaker.log
+LOG = shaker.log.getLogger(__name__)
 
-def init_directory(opts):
+DEFAULTS = {
+    # These values may be overridden in profile/default or
+    # a user profile, or command-line options.
+    'hostname': '',
+    'domain': '',
+    'sudouser': '',
+    'ssh_port': '22',
+    'ssh_import': '',
+    'timezone': '',
+    'assign_dns': '', # Hmmm ...?
+    'ec2_zone': 'us-east-1b',
+    'ec2_instance_type': 'm1.small',
+    'ec2_ami_id': '',
+    'ec2_distro': 'oneiric',
+    'ec2_size': '0',
+    'ec2_key_name': '',
+    'ec2_security_group': 'default',
+    'ec2_monitoring_enabled': '',
+    'ec2_root_device': '/dev/sda1',
+    'relayhost': '',
+    'mailto': '',
+    'salt_master': '',
+    'salt_id': '',
+    }
+
+
+def get_config_dir(path=None):
     """
-    Initialize shaker configuration from cli, environment, defaults.
+    Return the shaker configuration directory.  Create and populate
+    it if missing.
     """
-    if opts.config_dir:
-        config_dir = opts.config_dir
+    if path:
+        config_dir = path
     elif os.environ.get('SHAKER_CONFIG_DIR'):
         config_dir = os.environ['SHAKER_CONFIG_DIR']
     else:
@@ -29,34 +57,41 @@ def init_directory(opts):
         os.makedirs(config_dir)
     return config_dir
 
-def read_default_config(opts):
-    defaults = {
-        'ssh_port': '22',
-        'ec2_zone': 'us-east-1b',
-        'ec2_instance_type': 'm1.small',
-        'ec2_distro': 'oneiric',
-        'ec2_size': '0',
-        'ec2_security_group': 'default',
-        'ec2_root_device': '/dev/sda1',
-        }
 
-    default_config = os.path.join(opts.config_dir, DEFAULT_CONFIG_FILENAME)
-    if not os.path.isfile(default_config):
-        template = Template(DEFAULT_CONFIG)
-        with open(default_config, 'w') as f:
-            f.write(template.render(defaults))
+def default_profile(config_dir):
+    profile_dir = os.path.join(config_dir, 'profile')
+    default_profile = os.path.join(profile_dir, 'default')
+    if not os.path.isdir(profile_dir):
+        os.makedirs(profile_dir)
+    if not os.path.isfile(default_profile):
+        LOG.info("Default profile not found, creating: {0}".format(default_profile))
+        template = Template(DEFAULT_PROFILE)
+        with open(default_profile, 'w') as f:
+            f.write(template.render(DEFAULTS))
+    profile = dict(DEFAULTS)
+    profile.update(yaml.load(file(default_profile, 'r')) or {})
+    return profile
 
-    # Read default_config (YAML), which will then be overridden
-    # by profile, opts ...
+def user_profile(profile_name, cli, config_dir):
+    """User profile, cli overrides defaults.
+    """
+    profile_dir = os.path.join(config_dir, 'profile')
+    profile_path = os.path.join(profile_dir, profile_name)
+    default_path = os.path.join(profile_dir, 'default')
+    profile = default_profile(config_dir) or {}
+    if not os.path.isfile(profile_path):
+        import shutil
+        shutil.copy2(default_path, profile_path)
+        LOG.info("Created profile: {0}".format(profile_path))
+    else:
+        profile.update(yaml.load(file(profile_path, 'r')) or {})
+    for k, v in cli.__dict__.items():
+        if k in profile and v:
+            profile[k] = v
+    return profile
 
-def read_profile(profile_pathname):
-    pass
 
-
-# If the default.cfg cannot be found, create it from the DEFAULT_CONFIG
-# template.
-
-DEFAULT_CONFIG = """####################################################################
+DEFAULT_PROFILE = """####################################################################
 # hostname, domain to assign the instance.
 ####################################################################
 
@@ -103,6 +138,12 @@ DEFAULT_CONFIG = """############################################################
 ####################################################################
 # ec2_instance_type defaults to m1.small
 # http://aws.amazon.com/ec2/instance-types/
+#
+# t1.micro
+# m1.small  (default)
+# m2.xlarge, m2.2xlarge, m2.4xlarge
+# c1.medium, c1.xlarge, cc1.4xlarge, cc2.8xlarge
+#
 ####################################################################
 
 #ec2_instance_type: {{ ec2_instance_type }}
@@ -182,11 +223,3 @@ DEFAULT_CONFIG = """############################################################
 
 #salt_id:
 """
-
-
-# if __name__ == '__main__':
-#     class Opts(object):
-#         def __init__(self, config_dir):
-#             self.config_dir = config_dir
-#     opts = Opts('.')
-#     read_default_config(opts)
