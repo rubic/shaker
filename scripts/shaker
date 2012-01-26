@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-This script is used to launch and terminate ec2 salt minions
+This script is used to launch ec2 salt minions
 """
 
 import os

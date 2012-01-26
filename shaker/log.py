@@ -1,9 +1,17 @@
 import os
 import logging
 
-def start_logger(logname, filename):
+LOG_LEVELS = {
+    'debug': logging.DEBUG,
+    'error': logging.ERROR,
+    'info': logging.INFO,
+    'none': logging.NOTSET,
+    'warning': logging.WARNING,
+}
+
+def start_logger(logname, filename, log_level):
     consoleLogger = logging.StreamHandler()
-    consoleLogger.setLevel(logging.INFO)
+    consoleLogger.setLevel(logging.WARNING)
     logging.getLogger(logname).addHandler(consoleLogger)
     formatter = logging.Formatter(
         '%(asctime)-6s: %(name)s - %(levelname)s - %(message)s')
@@ -13,11 +21,11 @@ def start_logger(logname, filename):
         os.makedirs(directory)
 
     fileLogger = logging.FileHandler(filename=filename)
-    fileLogger.setLevel(logging.INFO)
+    fileLogger.setLevel(LOG_LEVELS[log_level])
     fileLogger.setFormatter(formatter)
     logging.getLogger(logname).addHandler(fileLogger)
     logger = logging.getLogger(logname)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(LOG_LEVELS[log_level])
 
 
 def getLogger(logname):

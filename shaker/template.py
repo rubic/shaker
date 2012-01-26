@@ -4,32 +4,41 @@
 Handle the templates to configure user-data.
 """
 import os
+import re
+from jinja2 import Environment
+from jinja2 import FileSystemLoader
 
 CLOUD_INIT_NAME = 'cloud-init'
 USER_SCRIPT_NAME = 'user-script'
 
-def get_template_dir(config_dir):
-    """Return the template directory name, creating the
-    directory if absent (and populating with boilerplate).
-    """
-    template_dir = os.path.join(config_dir, 'templates')
-    if not os.path.isdir(template_dir):
-        os.makedirs(template_dir)
-    for filename, template in [(CLOUD_INIT_NAME, CLOUD_INIT),
-                               (USER_SCRIPT_NAME, USER_SCRIPT),]:
-        path = os.path.join(template_dir, filename)
-        if not os.path.isfile(path):
-            with open(path, 'w') as f:
-                f.write(template)
-    return template_dir
 
-def cloud_init(config_dir):
-    path = os.path.join(get_template_dir(config_dir), CLOUD_INIT_NAME)
-    return open(path).read()
+class UserData(object):
+    def __init__(self, config):
+        self.template_dir = self.get_template_dir(config['config_dir'])
+        env = Environment(loader=FileSystemLoader(self.template_dir))
+        self.user_script = re.sub(
+            '\n\n+',
+            '\n\n',
+            env.get_template(USER_SCRIPT_NAME).render(config))
+        self.cloud_init = re.sub(
+            '\n\n+',
+            '\n\n',
+            env.get_template(CLOUD_INIT_NAME).render(config))
 
-def user_script(config_dir):
-    path = os.path.join(get_template_dir(config_dir), USER_SCRIPT_NAME)
-    return open(path).read()
+    def get_template_dir(self, config_dir):
+        """Return the template directory name, creating the
+        directory if absent (and populating with boilerplate).
+        """
+        template_dir = os.path.join(config_dir, 'templates')
+        if not os.path.isdir(template_dir):
+            os.makedirs(template_dir)
+        for filename, template in [(CLOUD_INIT_NAME, CLOUD_INIT),
+                                   (USER_SCRIPT_NAME, USER_SCRIPT),]:
+            path = os.path.join(template_dir, filename)
+            if not os.path.isfile(path):
+                with open(path, 'w') as f:
+                    f.write(template)
+        return template_dir
 
 
 CLOUD_INIT = """#cloud-config

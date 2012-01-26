@@ -8,6 +8,7 @@ import time
 import optparse
 import email.mime
 import boto
+import boto.ec2
 from boto.ec2.blockdevicemapping import EBSBlockDeviceType, BlockDeviceMapping
 import shaker.log
 import shaker.config
@@ -20,19 +21,20 @@ class EBSFactory(object):
     """EBSFactory - build and launch EBS salt minions.
     """
     def __init__(self):
-        self.config_dir = None
-        profile_name, self.cli = self.parse_cli()
+        cli, config_dir, arg0 = self.parse_cli()
         self.profile = shaker.config.user_profile(
-            profile_name,
-            self.cli,
-            self.config_dir)
+            arg0,
+            cli,
+            config_dir)
+        self.test_mode = cli.test_mode
         self.config = dict(self.profile)
-        self.user_data = self.build_mime_multipart()
-        #print 'ec2_instance_type:', self.config['ec2_instance_type']
+        self.config['config_dir'] = config_dir
 
     def process(self):
+        self.user_data = self.build_mime_multipart()
+        LOG.debug("User Data Follows ..................\n{0}".format(self.user_data))
         self.conn = self.get_connection()
-        if self.verify_settings() and not self.cli.test_mode:
+        if self.verify_settings() and not self.test_mode:
             self.launch_instance()
             if self.config['assign_dns']:
                 self.assign_dns(self.config['assign_dns'])
@@ -45,7 +47,6 @@ class EBSFactory(object):
     def launch_instance(self):
         if not self.verify_settings():
             return
-        #print "launch_instance: %s" % i; i +=1 #XXX
         block_map = BlockDeviceMapping()
         root_device = self.config['ec2_root_device']
         block_map[root_device] = EBSBlockDeviceType()
@@ -78,16 +79,21 @@ class EBSFactory(object):
                 self.instance.id, RUN_INSTANCE_TIMEOUT)
             LOG.error(errmsg)
         else:
-            LOG.info("Started Instance: {0}".format(self.instance.id))
+            msg1 = "Started Instance: {0}\n".format(self.instance.id)
+            LOG.info(msg1)
+            print msg1
             p = int(self.config['ssh_port'])
-            port = "-p {0}".format(p) if p and not p == 22 else ''
-            user = self.config['sudouser'] if self.config['sudouser'] and self.config['ssh_import'] else 'ubuntu'  # change to root for all non-Ubuntu systems
+            port = "-p {0} ".format(p) if p and not p == 22 else ''
+            ## change user to 'root' for all non-Ubuntu systems
+            user = self.config['sudouser'] if self.config['sudouser'] and self.config['ssh_import'] else 'ubuntu'
             #XXX - TODO: replace public dns with fqdn, where appropriate
-            msg = "To access: ssh {0} {1}@{2}".format(
+            msg2 = "To access: ssh {0}{1}@{2}\nTo terminate: shaker-terminate {3}".format(
                 port,
                 user,
-                self.instance.public_dns_name)
-            LOG.info(msg)
+                self.instance.public_dns_name,
+                self.instance.id)
+            LOG.info(msg2)
+            print msg2
 
     def assign_name_tag(self):
         """Assign the 'Name' tag to the instance, but only if it isn't already in use."""
@@ -99,12 +105,11 @@ class EBSFactory(object):
         self.instance.add_tag('Name', tag)
 
     def build_mime_multipart(self):
-        cloud_init = shaker.template.cloud_init(self.config_dir)
-        user_script = shaker.template.user_script(self.config_dir)
+        userData = shaker.template.UserData(self.config)
         outer = email.mime.multipart.MIMEMultipart()
         for content, subtype, filename in [
-            (user_script, 'x-shellscript', 'user-script.txt'),
-            (cloud_init, 'cloud-config', 'cloud-config.txt'),]:
+            (userData.user_script, 'x-shellscript', 'user-script.txt'),
+            (userData.cloud_init, 'cloud-config', 'cloud-config.txt'),]:
             msg = email.mime.text.MIMEText(content, _subtype=subtype)
             msg.add_header('Content-Disposition',
                            'attachment',
@@ -148,19 +153,30 @@ class EBSFactory(object):
         parser.add_option('--ec2-group', dest='ec2_security_group')
         parser.add_option('--ec2-zone', dest='ec2_zone', default='')
         parser.add_option('--config-dir', dest='config_dir', help="configuration directory")
-        parser.add_option('', '--nouser', dest='nouser',
-                          action='store_true', default=False,
-                          help='create no user')
         parser.add_option('-t', '--test', dest='test_mode',
                           action='store_true', default=False,
                           help='test mode')
+        import shaker.log
+        parser.add_option('-l',
+                '--log-level',
+                dest='log_level',
+                default='warning',
+                choices=shaker.log.LOG_LEVELS.keys(),
+                help='Log level: %s.  \nDefault: %%default' %
+                     ', '.join(shaker.log.LOG_LEVELS.keys())
+                )
         (opts, args) = parser.parse_args()
         if len(args) < 1:
             print parser.format_help().strip()
-            raise SystemExit("\nError: Specify shaker profile")
+            if opts.terminate_instance:
+                errmsg = "\nError: Specify instance ID to terminate"
+            else:
+                errmsg = "\nError: Specify shaker profile"
+            raise SystemExit(errmsg)
         import shaker.config
-        self.config_dir = shaker.config.get_config_dir(opts.config_dir)
-        import shaker.log
-        shaker.log.start_logger(__name__,
-                                os.path.join(self.config_dir, 'shaker.log'))
-        return args[0], opts
+        config_dir = shaker.config.get_config_dir(opts.config_dir)
+        shaker.log.start_logger(
+            __name__,
+            os.path.join(config_dir, 'shaker.log'),
+            opts.log_level)
+        return opts, config_dir, args[0]

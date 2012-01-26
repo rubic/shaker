@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+"""
+Convenience script to terminate ec2 instances
+"""
+import os
+import sys
+import boto.ec2
+
+def terminate_instance(id):
+    """Terminate an instance by searching through all the regions.
+    """
+    for region in boto.ec2.regions():
+        conn = region.connect()
+        for reservation in conn.get_all_instances():
+            for instance in reservation.instances:
+                if instance.id == id:
+                    print "Terminating instance: {0}".format(id)
+                    instance.terminate()
+                    return
+    print "Unable to terminate instance: {0}".format(id)
+
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print "usage: {0} instance-id".format(
+            os.path.basename(sys.argv[0]))
+    else:
+        terminate_instance(sys.argv[1])
+
