@@ -32,7 +32,8 @@ class EBSFactory(object):
 
     def process(self):
         self.user_data = self.build_mime_multipart()
-        LOG.debug("User Data Follows ..................\n{0}".format(self.user_data))
+        LOG.debug("User Data Follows ..................\n{0}".format(
+            self.user_data))
         self.conn = self.get_connection()
         if self.verify_settings() and not self.test_mode:
             self.launch_instance()
@@ -41,7 +42,8 @@ class EBSFactory(object):
 
     def get_connection(self):
         regions = boto.ec2.regions()
-        region=[x.name for x in regions if x.name.startswith(self.config['ec2_zone'][:-1])][0]
+        region=[x.name for x in regions if x.name.startswith(
+            self.config['ec2_zone'][:-1])][0]
         return regions[[x.name for x in regions].index(region)].connect()
 
     def launch_instance(self):
