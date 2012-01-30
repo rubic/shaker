@@ -1,0 +1,86 @@
+* README
+** index.html
+Example:
+  - http://docs.python-requests.org/en/latest/index.html
+  - http://readthedocs.org
+  - "Fork me on Github" banner
+
+Shaker: Launch Salt Minions as Amazon EC2 Instances
+
+Release v##.##.# (Installation)
+
+Shaker is BSD-New Licensed command-line application, written in Python
+
+Salt is a powerful remote execution manager that can be used to
+administer servers in a fast and efficient way.
+
+Running an Amazon EC2 instance as a Salt minion is fairly simple.
+Also tedious, if you need to launch minions often.  Shaker bridges
+the gap between launching an EC2 instance and bootstrapping it as
+a Salt minion.
+
+Shaker is invoked from the command line:
+
+$ shaker --distro ubuntu --master salt.example.com
+
+Creates an small ubuntu server instance as a salt minion and
+registers it with the salt master at salt.example.com.
+
+Feature Support
+- User profiles in yaml
+- Customization with Jinja2 templates
+- Launch minions with pre-signed certificates
+- Standard AMIs for all regions
+- DNS assignment of minions via Route53
+- Extensive logging support
+
+** User Guide
+*** Introduction
+  - Brief explanation of Salt
+  - Testing minion configurations
+  - License
+*** Installation
+  - pip
+  - github
+  - dependencies
+    - boto
+    - PyYAML
+    - Jinja2
+*** Quickstart
+  - Shaker assumes you have a running salt master.  If not, see ###
+   - shaker --distro ubuntu --master <your-salt-master>
+  - Launch a distro instance as a salt minion
+  - Launch a specific AMI as a salt minion instance
+  - Create a user profile
+    - t1.micro instance
+  - Launch a minion with a pre-signed certificate
+  - Select a different EC2 zone
+  - DNS assignment of minion
+*** Advanced Usage
+  - salt_id
+  - ssh_import
+  - sudo_user
+  - ssh_port
+  - timezone
+  - custom templates
+
+*** Profile Configuration
+  - SHAKER_CONFIG_DIR
+  -
+
+*** API Documentation
+
+*** Developer Guide
+  - How to Help
+    - What Needs to be Done
+      - other distros
+      - standard AMIs
+      - custom templates
+  - Authors
+    - include Slick53
+
+- Appendix: Salt Master
+  - Installation
+  - Accessible from your minion
+  - ports 4505, 4506 open in security group
+
