@@ -5,16 +5,12 @@ Shaker configuration
 """
 
 from jinja2 import Template
-
 import yaml
-try:
-    yaml.Loader = yaml.CLoader
-    yaml.Dumper = yaml.CDumper
-except:
-    pass
-
+import shaker.ami
 import shaker.log
 LOG = shaker.log.getLogger(__name__)
+
+DEFAULT_EC2_ZONE = 'us-east-1b'
 
 DEFAULTS = {
     # These values may be overridden in profile/default or
@@ -26,7 +22,7 @@ DEFAULTS = {
     'ssh_import': '',
     'timezone': '',
     'assign_dns': '', # Hmmm ...?
-    'ec2_zone': 'us-east-1b',
+    'ec2_zone': DEFAULT_EC2_ZONE,
     'ec2_instance_type': 'm1.small',
     'ec2_ami_id': '',
     'ec2_distro': 'oneiric',
@@ -35,8 +31,7 @@ DEFAULTS = {
     'ec2_security_group': 'default',
     'ec2_monitoring_enabled': '',
     'ec2_root_device': '/dev/sda1',
-    'relayhost': '',
-    'mailto': '',
+    'ec2_architecture': 'i386',
     'salt_master': '',
     'salt_id': '',
     }
@@ -72,22 +67,43 @@ def default_profile(config_dir):
     profile.update(yaml.load(file(default_profile, 'r')) or {})
     return profile
 
-def user_profile(profile_name, cli, config_dir):
+def user_profile(cli, config_dir, profile_name=None):
     """User profile, cli overrides defaults.
     """
-    profile_dir = os.path.join(config_dir, 'profile')
-    profile_path = os.path.join(profile_dir, profile_name)
-    default_path = os.path.join(profile_dir, 'default')
     profile = default_profile(config_dir) or {}
-    if not os.path.isfile(profile_path):
-        import shutil
-        shutil.copy2(default_path, profile_path)
-        LOG.info("Created profile: {0}".format(profile_path))
+    if profile_name:
+        profile_dir = os.path.join(config_dir, 'profile')
+        profile_path = os.path.join(profile_dir, profile_name)
+        default_path = os.path.join(profile_dir, 'default')
+        if not os.path.isfile(profile_path):
+            import shutil
+            shutil.copy2(default_path, profile_path)
+            LOG.info("Created profile: {0}".format(profile_path))
+        else:
+            try:
+                profile.update(yaml.load(file(profile_path, 'r')) or {})
+            except yaml.scanner.ScannerError, err:
+                msg = "Error scanning profile {0}: {1}".format(
+                    profile_path, err)
+                LOG.error(msg)
     else:
-        profile.update(yaml.load(file(profile_path, 'r')) or {})
+        LOG.info("No profile specified.")
     for k, v in cli.__dict__.items():
         if k in profile and v:
             profile[k] = v
+    # If the distro is specified in the command-line, we override
+    # the profile ec2_ami_id value.
+    if cli.distro:
+        ec2_ami_id = shaker.ami.get_ami(cli.distro, profile)
+        if ec2_ami_id:
+            profile['ec2_ami_id'] = ec2_ami_id
+        else:
+            msg = "Unable to find AMI for distro: {0}".format(cli.distro)
+            LOG.info(msg)
+    msg = "Selected AMI {0} in zone {1}".format(
+        profile['ec2_ami_id'],
+        profile['ec2_zone'])
+    LOG.info(msg)
     return profile
 
 

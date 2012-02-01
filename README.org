@@ -33,7 +33,6 @@ Feature Support
 - Standard AMIs for all regions
 - DNS assignment of minions via Route53
 - Extensive logging support
-
 ** User Guide
 *** Introduction
   - Brief explanation of Salt

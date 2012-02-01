@@ -31,6 +31,21 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+Examples:
+
+    $ shaker --dry-run --distro=ubuntu
+
+    Chooses an AMI based on defaults.  Dumps the "dry run" user data
+    to the screen.
+
+
+    $ shaker --distro=ubuntu  --master yourmaster.example.com
+
+    Started Instance: i-9175d8f4
+
+    To access: ssh ubuntu@ec2-107-20-93-179.compute-1.amazonaws.com
+
+    To terminate: shaker-terminate i-9175d8f4
 
 
 Indices and tables

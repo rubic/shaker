@@ -1,4 +1,54 @@
-# Amazon EC2 AMIs - EBS Images
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+
+"""
+Select the AMI from specified distro
+
+>>> distro = 'ubuntu'
+>>> profile = {'ec2_zone': 'us-west-1a'}
+>>> get_ami(distro, profile)
+'ami-3f94ca7a'
+
+>>> distro = 'natty'
+>>> get_ami(distro, profile)
+'ami-43580406'
+
+>>> distro = 'squeeze'
+>>> profile['ec2_architecture'] = 'x86_64'
+>>> get_ami(distro, profile)
+'ami-75287b30'
+"""
+
+import yaml
+
+import shaker.log
+LOG = shaker.log.getLogger(__name__)
+
+def get_ami(distro, profile):
+    """Return an AMI ID matching the distro.
+    """
+    y = yaml.load(EBSImages)
+    try:
+        region = profile['ec2_zone'][:-1]
+        architecture = profile.get('ec2_architecture', 'i386')
+        release = y['release'].get(distro) or distro
+        for distro in y['release']:
+            if release in y[distro]:
+                return y[distro][release][region][architecture]
+    except KeyError:
+        pass
+    except IndexError:
+        pass
+    return None
+
+
+# EBSImages to be treated as (and eventually packaged) a yaml file.
+
+EBSImages = """# Amazon EC2 AMIs - EBS Images
+release:
+  ubuntu: oneiric
+  debian: squeeze
 
 ubuntu:
   oneiric:
@@ -66,3 +116,8 @@ debian:
     sa-east-1:
       i386: ami-d427f8c9
       x86_64: ami-3826f925
+"""
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

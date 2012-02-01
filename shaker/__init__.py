@@ -14,30 +14,33 @@ import shaker.log
 import shaker.config
 import shaker.template
 LOG = shaker.log.getLogger(__name__)
-RUN_INSTANCE_TIMEOUT = 120 # seconds
+RUN_INSTANCE_TIMEOUT = 180 # seconds
 
 
 class EBSFactory(object):
     """EBSFactory - build and launch EBS salt minions.
     """
     def __init__(self):
-        cli, config_dir, arg0 = self.parse_cli()
+        cli, config_dir, profile = self.parse_cli()
         self.profile = shaker.config.user_profile(
-            arg0,
             cli,
-            config_dir)
-        self.test_mode = cli.test_mode
+            config_dir,
+            profile)
+        self.dry_run = cli.dry_run
         self.config = dict(self.profile)
         self.config['config_dir'] = config_dir
 
     def process(self):
         self.user_data = self.build_mime_multipart()
-        LOG.debug("User Data Follows ..................\n{0}".format(
-            self.user_data))
+        user_data_msg = "User Data Follows\n{0}".format(self.user_data)
+        LOG.info(user_data_msg)
+        if self.dry_run:
+            print user_data_msg
         self.conn = self.get_connection()
-        if self.verify_settings() and not self.test_mode:
+        if self.verify_settings() and not self.dry_run:
             self.launch_instance()
             if self.config['assign_dns']:
+                #XXX - Not yet implemented
                 self.assign_dns(self.config['assign_dns'])
 
     def get_connection(self):
@@ -89,16 +92,19 @@ class EBSFactory(object):
             ## change user to 'root' for all non-Ubuntu systems
             user = self.config['sudouser'] if self.config['sudouser'] and self.config['ssh_import'] else 'ubuntu'
             #XXX - TODO: replace public dns with fqdn, where appropriate
-            msg2 = "To access: ssh {0}{1}@{2}\nTo terminate: shaker-terminate {3}".format(
-                port,
-                user,
-                self.instance.public_dns_name,
-                self.instance.id)
+            msg2 = "To access: ssh {0}{1}@{2}\n" \
+                   "To terminate: shaker-terminate {3}".format(
+                       port,
+                       user,
+                       self.instance.public_dns_name,
+                       self.instance.id)
             LOG.info(msg2)
             print msg2
 
     def assign_name_tag(self):
-        """Assign the 'Name' tag to the instance, but only if it isn't already in use."""
+        """Assign the 'Name' tag to the instance, but only if it
+        isn't already in use.
+        """
         tag = self.config['hostname']
         for reservation in self.conn.get_all_instances():
                 for i in reservation.instances:
@@ -148,34 +154,52 @@ class EBSFactory(object):
     def parse_cli(self):
         parser = optparse.OptionParser(
             usage="%prog [options] profile",
-            version="%%prog %s" % __version__,
-        )
-        parser.add_option('-a', '--ami', dest='ec2_ami_id', metavar='AMI',
-                          help='build instance from AMI')
+            version="%%prog %s" % __version__)
+        parser.add_option(
+            '-a', '--ami', dest='ec2_ami_id', metavar='AMI',
+            help='Build instance from AMI')
+        parser.add_option(
+            '-d', '--distro', dest='distro',
+            metavar='DISTRO', default='',
+            help="Build minion (ubuntu, debian, squeeze, oneiric, etc.)")
         parser.add_option('--ec2-group', dest='ec2_security_group')
         parser.add_option('--ec2-zone', dest='ec2_zone', default='')
-        parser.add_option('--config-dir', dest='config_dir', help="configuration directory")
-        parser.add_option('-t', '--test', dest='test_mode',
-                          action='store_true', default=False,
-                          help='test mode')
+        parser.add_option(
+            '--config-dir', dest='config_dir',
+            help="Configuration directory")
+        parser.add_option(
+            '--dry-run', dest='dry_run',
+            action='store_true', default=False,
+            help="Log the initialization setup, but don't launch the instance")
+        parser.add_option(
+            '-m', '--master', dest='salt_master',
+            metavar='SALT_MASTER', default='',
+            help="Connect salt minion to SALT_MASTER")
         import shaker.log
         parser.add_option('-l',
                 '--log-level',
                 dest='log_level',
-                default='warning',
+                default='info',
                 choices=shaker.log.LOG_LEVELS.keys(),
                 help='Log level: %s.  \nDefault: %%default' %
                      ', '.join(shaker.log.LOG_LEVELS.keys())
                 )
         (opts, args) = parser.parse_args()
         if len(args) < 1:
-            print parser.format_help().strip()
-            errmsg = "\nError: Specify shaker profile"
-            raise SystemExit(errmsg)
+            if opts.ec2_ami_id or opts.distro:
+                profile = None
+            else:
+                print parser.format_help().strip()
+                errmsg = "\nError: Specify shaker profile or EC2 ami or distro"
+                raise SystemExit(errmsg)
+        else:
+            profile = args[0]
         import shaker.config
         config_dir = shaker.config.get_config_dir(opts.config_dir)
         shaker.log.start_logger(
             __name__,
             os.path.join(config_dir, 'shaker.log'),
             opts.log_level)
-        return opts, config_dir, args[0]
+        if opts.ec2_ami_id:
+            opts.distro = ''  # mutually exclusive
+        return opts, config_dir, profile
