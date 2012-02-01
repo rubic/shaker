@@ -1,4 +1,9 @@
+import os
 from distutils.core import setup
+
+# Utility function to read the README file.
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
     name = "shaker",
@@ -12,6 +17,8 @@ setup(
     keywords = ["salt", "ec2", "aws"],
     classifiers = [
         "Programming Language :: Python",
+        "Programming Language :: Python :: 2.6",
+        "Programming Language :: Python :: 2.7",
         "Development Status :: 3 - Alpha",
         "Environment :: Console",
         "Intended Audience :: Developers",
@@ -20,13 +27,8 @@ setup(
         "Topic :: System :: Distributed Computing",
         "Topic :: System :: Systems Administration",
         ],
-    long_description = """\
-Create and Launch Salt Minions on EC2
--------------------------------------
-
-More description to follow ...
- - salt minions are created and launched
- - template-based (Jinja2)
- - supports Ubuntu, Debian and soon (Fedora)
-"""
+    long_description = read('README.rst'),
+    scripts=['scripts/shaker',
+             'scripts/shaker-terminate',
+         ],
 )

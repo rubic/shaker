@@ -170,10 +170,7 @@ class EBSFactory(object):
         (opts, args) = parser.parse_args()
         if len(args) < 1:
             print parser.format_help().strip()
-            if opts.terminate_instance:
-                errmsg = "\nError: Specify instance ID to terminate"
-            else:
-                errmsg = "\nError: Specify shaker profile"
+            errmsg = "\nError: Specify shaker profile"
             raise SystemExit(errmsg)
         import shaker.config
         config_dir = shaker.config.get_config_dir(opts.config_dir)
