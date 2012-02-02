@@ -6,7 +6,7 @@
 Shaker: A salt minion factory for EC2 instances
 ===============================================
 
-Release
+Release v\ |version|.
 
 Shaker is BSD-New Licensed command-line application to launch Salt
 minions as Amazon EC2 instances.
