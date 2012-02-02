@@ -1,5 +1,5 @@
 """
-Build and lauch EBS instances as salt minions.
+Build and launch EBS instances as salt minions.
 """
 from shaker.version import __version__
 
@@ -16,6 +16,17 @@ import shaker.template
 LOG = shaker.log.getLogger(__name__)
 RUN_INSTANCE_TIMEOUT = 180 # seconds
 
+InstanceTypes = [
+    't1.micro',
+    'm1.small',
+    'm2.xlarge',
+    'm2.2xlarge',
+    'm2.4xlarge',
+    'c1.medium',
+    'c1.xlarge',
+    'cc1.4xlarge',
+    'cc2.8xlarge',
+    ]
 
 class EBSFactory(object):
     """EBSFactory - build and launch EBS salt minions.
@@ -41,6 +52,7 @@ class EBSFactory(object):
             self.launch_instance()
             if self.config['assign_dns']:
                 #XXX - Not yet implemented
+                LOG.info("assign_dns not yet implemented")
                 self.assign_dns(self.config['assign_dns'])
 
     def get_connection(self):
@@ -125,7 +137,6 @@ class EBSFactory(object):
             outer.attach(msg)
         return outer.as_string()
 
-    #XXX - Possibly move this to its own module
     def verify_settings(self):
         if not self.config['ec2_ami_id']:
             LOG.error("Missing ec2_ami_id")
@@ -138,17 +149,17 @@ class EBSFactory(object):
                 LOG.error("Missing ec2_key_name parameter")
                 return False
             self.config['ec2_key_name'] = [kp.name for kp in key_pairs][0]
-        #XXX TODO: add error handling, logging for ec2_size
         if self.config['ec2_size']:
             try:
                 self.config['ec2_size'] = int(self.config['ec2_size'])
             except ValueError:
-                self.config['ec2_size'] = 0
-        # verify ec2_instance_type in:
-            # t1.micro
-            # m1.small  (default)
-            # m2.xlarge, m2.2xlarge, m2.4xlarge
-            # c1.medium, c1.xlarge, cc1.4xlarge, cc2.8xlarge
+                LOG.error("Invalid ec2_size: {0}".format(
+                    self.config['ec2_size']))
+                return False
+        if not self.config['ec2_instance_type'] in InstanceTypes:
+            LOG.error("Invalid ec2_instance_type: {0}".format(
+                self.config['ec2_instance_type']))
+            return False
         return True
 
     def parse_cli(self):
@@ -175,6 +186,14 @@ class EBSFactory(object):
             '-m', '--master', dest='salt_master',
             metavar='SALT_MASTER', default='',
             help="Connect salt minion to SALT_MASTER")
+        parser.add_option(
+            '--hostname', dest='hostname',
+            metavar='HOSTNAME', default='',
+            help="Assign HOSTNAME to salt minion")
+        parser.add_option(
+            '--domain', dest='domain',
+            metavar='DOMAIN', default='',
+            help="Assign DOMAIN name to salt minion")
         import shaker.log
         parser.add_option('-l',
                 '--log-level',
