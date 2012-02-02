@@ -174,6 +174,7 @@ class EBSFactory(object):
             metavar='DISTRO', default='',
             help="Build minion (ubuntu, debian, squeeze, oneiric, etc.)")
         parser.add_option('--ec2-group', dest='ec2_security_group')
+        parser.add_option('--ec2-key', dest='ec2_key_name')
         parser.add_option('--ec2-zone', dest='ec2_zone', default='')
         parser.add_option(
             '--config-dir', dest='config_dir',
