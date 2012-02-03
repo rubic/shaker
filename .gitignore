@@ -1,3 +1,7 @@
 *.pyc
 build/
 docs/_build/
+dist/
+pip-log.txt
+shaker.egg-info/
+
