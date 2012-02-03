@@ -10,30 +10,28 @@ import shaker.ami
 import shaker.log
 LOG = shaker.log.getLogger(__name__)
 
-DEFAULT_EC2_ZONE = 'us-east-1b'
-
 DEFAULTS = {
-    # These values may be overridden in profile/default or
+    # These values will be overridden in profile/default or
     # a user profile, or command-line options.
-    'hostname': '',
-    'domain': '',
-    'sudouser': '',
+    'hostname': None,
+    'domain': None,
+    'sudouser': None,
     'ssh_port': '22',
-    'ssh_import': '',
-    'timezone': '',
-    'assign_dns': '', # Hmmm ...?
-    'ec2_zone': DEFAULT_EC2_ZONE,
+    'ssh_import': None,
+    'timezone': None,
+    'assign_dns': False,  # Hmmm ...?
+    'ec2_zone': 'us-east-1a',
     'ec2_instance_type': 'm1.small',
-    'ec2_ami_id': '',
-    'ec2_distro': 'oneiric',
-    'ec2_size': '0',
-    'ec2_key_name': '',
+    'ec2_ami_id': None,
+    'ec2_distro': None,
+    'ec2_size': None,
+    'ec2_key_name': None,
     'ec2_security_group': 'default',
-    'ec2_monitoring_enabled': '',
+    'ec2_monitoring_enabled': False,
     'ec2_root_device': '/dev/sda1',
     'ec2_architecture': 'i386',
-    'salt_master': '',
-    'salt_id': '',
+    'salt_master': None,
+    'salt_id': None,
     }
 
 
@@ -66,6 +64,26 @@ def default_profile(config_dir):
     profile = dict(DEFAULTS)
     profile.update(yaml.load(file(default_profile, 'r')) or {})
     return profile
+
+
+def create_profile(profile, config_dir, profile_name):
+    """
+    Generate a profile with config parameters and save to disk
+
+    Parameters not specified in the config will inherit from
+    the default profile.
+    """
+    profile_dir = os.path.join(config_dir, 'profile')
+    profile_location = os.path.join(profile_dir, profile_name)
+    profile_copy = dict(profile)
+    if not os.path.isfile(profile_location):
+        LOG.info("Creating new profile: {0}".format(profile_location))
+    else:
+        LOG.info("Overwriting profile: {0}".format(profile_location))
+    with open(profile_location, 'w') as f:
+        f.write(yaml.dump(profile_copy, default_flow_style=False))
+    return profile_copy
+
 
 def user_profile(cli, config_dir, profile_name=None):
     """User profile, cli overrides defaults.

@@ -14,7 +14,7 @@ import shaker.log
 import shaker.config
 import shaker.template
 LOG = shaker.log.getLogger(__name__)
-RUN_INSTANCE_TIMEOUT = 180 # seconds
+RUN_INSTANCE_TIMEOUT = 180  # seconds
 
 InstanceTypes = [
     't1.micro',
@@ -28,6 +28,7 @@ InstanceTypes = [
     'cc2.8xlarge',
     ]
 
+
 class EBSFactory(object):
     """EBSFactory - build and launch EBS salt minions.
     """
@@ -38,26 +39,33 @@ class EBSFactory(object):
             config_dir,
             profile)
         self.dry_run = cli.dry_run
+        self.to_profile = cli.to_profile
         self.config = dict(self.profile)
         self.config['config_dir'] = config_dir
 
     def process(self):
-        self.user_data = self.build_mime_multipart()
-        user_data_msg = "User Data Follows\n{0}".format(self.user_data)
-        LOG.info(user_data_msg)
-        if self.dry_run:
-            print user_data_msg
-        self.conn = self.get_connection()
-        if self.verify_settings() and not self.dry_run:
-            self.launch_instance()
-            if self.config['assign_dns']:
-                #XXX - Not yet implemented
-                LOG.info("assign_dns not yet implemented")
-                self.assign_dns(self.config['assign_dns'])
+        if self.to_profile:
+            shaker.config.create_profile(
+                self.profile,
+                self.config['config_dir'],
+                self.to_profile)
+        else:
+            self.user_data = self.build_mime_multipart()
+            user_data_msg = "User Data Follows\n{0}".format(self.user_data)
+            LOG.info(user_data_msg)
+            if self.dry_run:
+                print user_data_msg
+            self.conn = self.get_connection()
+            if self.verify_settings() and not self.dry_run:
+                self.launch_instance()
+                if self.config['assign_dns']:
+                    #XXX - Not yet implemented
+                    LOG.info("assign_dns not yet implemented")
+                    self.assign_dns(self.config['assign_dns'])
 
     def get_connection(self):
         regions = boto.ec2.regions()
-        region=[x.name for x in regions if x.name.startswith(
+        region = [x.name for x in regions if x.name.startswith(
             self.config['ec2_zone'][:-1])][0]
         return regions[[x.name for x in regions].index(region)].connect()
 
@@ -137,6 +145,9 @@ class EBSFactory(object):
             outer.attach(msg)
         return outer.as_string()
 
+    def build_profile(self):
+        print self.config
+
     def verify_settings(self):
         if not self.config['ec2_ami_id']:
             LOG.error("Missing ec2_ami_id")
@@ -183,6 +194,11 @@ class EBSFactory(object):
             '--dry-run', dest='dry_run',
             action='store_true', default=False,
             help="Log the initialization setup, but don't launch the instance")
+        parser.add_option(
+            '--to-profile', dest='to_profile',
+            default=False,
+            help="Save options to a specified profile"
+        )
         parser.add_option(
             '-m', '--master', dest='salt_master',
             metavar='SALT_MASTER', default='',
