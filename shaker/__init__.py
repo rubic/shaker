@@ -145,9 +145,6 @@ class EBSFactory(object):
             outer.attach(msg)
         return outer.as_string()
 
-    def build_profile(self):
-        print self.config
-
     def verify_settings(self):
         if not self.config['ec2_ami_id']:
             LOG.error("Missing ec2_ami_id")
