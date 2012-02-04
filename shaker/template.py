@@ -8,22 +8,26 @@ import re
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
 
+from shaker import __version__
+
 CLOUD_INIT_NAME = 'cloud-init'
 USER_SCRIPT_NAME = 'user-script'
 
 
 class UserData(object):
     def __init__(self, config):
-        self.template_dir = self.get_template_dir(config['config_dir'])
+        cfg = {'version': __version__}
+        cfg.update(config)
+        self.template_dir = self.get_template_dir(cfg['config_dir'])
         env = Environment(loader=FileSystemLoader(self.template_dir))
         self.user_script = re.sub(
             '\n\n+',
             '\n\n',
-            env.get_template(USER_SCRIPT_NAME).render(config))
+            env.get_template(USER_SCRIPT_NAME).render(cfg))
         self.cloud_init = re.sub(
             '\n\n+',
             '\n\n',
-            env.get_template(CLOUD_INIT_NAME).render(config))
+            env.get_template(CLOUD_INIT_NAME).render(cfg))
 
     def get_template_dir(self, config_dir):
         """Return the template directory name, creating the
@@ -42,12 +46,15 @@ class UserData(object):
 
 
 CLOUD_INIT = """#cloud-config
-
+# Shaker version: {{ version }}
 {% if salt_master %}
+{% if not ec2_distro in ['lucid', 'maverick', 'natty'] %}
 apt_sources:
   - source: "ppa:saltstack/salt"
-{% endif %}
+
 apt_upgrade: true
+{% endif %}
+{% endif %}
 
 {% if ssh_import %}
 ssh_import_id: [{{ ssh_import }}]
@@ -62,7 +69,7 @@ fqdn: {{ hostname }}.{{ domain }}
 """
 
 USER_SCRIPT = """#!/bin/sh
-
+# Shaker version: {{ version }}
 {% if timezone %}
 # set timezone
 echo "{{ timezone }}" | tee /etc/timezone
@@ -100,6 +107,11 @@ resize2fs {{ root_device }}
 
 {% if salt_master %}
 # Install salt-minion and run as daemon
+
+{% if ec2_distro in ['lucid', 'maverick'] %}
+aptitude -y install python-software-properties && add-apt-repository ppa:chris-lea/libpgm && add-apt-repository ppa:chris-lea/zeromq && add-apt-repository ppa:saltstack/salt && aptitude update
+{% endif %}
+
 apt-get -y install salt
 
 MINION_CONFIG=/etc/salt/minion
