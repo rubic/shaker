@@ -1,5 +1,6 @@
 import os
 from setuptools import setup
+import shaker
 
 # Utility function to read the README file.
 def read(fname):
@@ -8,12 +9,11 @@ def read(fname):
 setup(
     name = "shaker",
     packages = ["shaker"],
-    version = "0.1.0",
+    version = shaker.__version__,
     description = "EC2 Salt Minion Launcher",
     author = "Jeff Bauer",
     author_email = "jbauer@rubic.com",
     url = "https://github.com/rubic/shaker",
-    #download_url = "http://python.net/crew/jbauer/shaker-0.1.0.tgz",
     keywords = ["salt", "ec2", "aws"],
     classifiers = [
         "Programming Language :: Python",
