@@ -241,13 +241,6 @@ DEFAULT_PROFILE = """###########################################################
 #ec2_root_device: /dev/sda1
 
 ####################################################################
-# Send email when configuration is complete to 'mailto' address
-####################################################################
-
-#relayhost:
-#mailto:
-
-####################################################################
 # salt_master is the location (dns or ip) of the salt master
 # to connect to, e.g.: master.example.com
 ####################################################################

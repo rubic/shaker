@@ -10,14 +10,17 @@ Select the AMI from specified distro
 >>> get_ami(distro, profile)
 'ami-3f94ca7a'
 
->>> distro = 'natty'
+>>> distro = 'lucid'
 >>> get_ami(distro, profile)
-'ami-43580406'
+'ami-9991cfdc'
 
 >>> distro = 'squeeze'
 >>> profile['ec2_architecture'] = 'x86_64'
 >>> get_ami(distro, profile)
 'ami-75287b30'
+
+>>> lsb(distro)
+('debian', 'squeeze')
 """
 
 import yaml
@@ -41,6 +44,28 @@ def get_ami(distro, profile):
     except IndexError:
         pass
     return None
+
+
+def lsb(distro):
+    """Returns:  lsb_distributor_id, lsb_codename
+
+    Used in the templates to customize instance startup.  Both
+    values will be returned in lower case, e.g. ubuntu, not
+    Ubuntu.
+    """
+    if distro in ['karmic',
+                  'lucid',
+                  'maverick',
+                  'natty',
+                  'oneiric',
+                  'precise',]:
+        return 'ubuntu', distro
+    elif distro in ['squeeze',]:
+        return 'debian', distro
+    elif distro in ['ubuntu', 'debian']:
+        y = yaml.load(EBSImages)
+        return distro, y['release'][distro]
+    return None, None
 
 
 # EBSImages to be treated as (and eventually packaged) a yaml file.

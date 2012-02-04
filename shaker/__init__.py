@@ -42,6 +42,8 @@ class EBSFactory(object):
         self.to_profile = cli.to_profile
         self.config = dict(self.profile)
         self.config['config_dir'] = config_dir
+        (self.config['lsb_distributor'],
+         self.config['lsb_codename']) = shaker.ami.lsb(self.config['ec2_distro'])
 
     def process(self):
         if self.to_profile:
