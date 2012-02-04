@@ -74,13 +74,15 @@ def create_profile(profile, config_dir, profile_name):
     the default profile.
     """
     profile_dir = os.path.join(config_dir, 'profile')
-    profile_location = os.path.join(profile_dir, profile_name)
+    profile_path = os.path.join(profile_dir, profile_name)
     profile_copy = dict(profile)
-    if not os.path.isfile(profile_location):
-        LOG.info("Creating new profile: {0}".format(profile_location))
+    if not os.path.isfile(profile_path):
+        msg = "Creating new profile: {0}".format(profile_path)
     else:
-        LOG.info("Overwriting profile: {0}".format(profile_location))
-    with open(profile_location, 'w') as f:
+        msg = "Overwriting profile: {0}".format(profile_path)
+    LOG.info(msg)
+    print msg
+    with open(profile_path, 'w') as f:
         f.write(yaml.dump(profile_copy, default_flow_style=False))
     return profile_copy
 

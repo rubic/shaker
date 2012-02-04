@@ -5,3 +5,7 @@ dist/
 pip-log.txt
 shaker.egg-info/
 
+
+shaker/shaker.sublime-project
+
+shaker/shaker.sublime-workspace
