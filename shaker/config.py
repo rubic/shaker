@@ -20,7 +20,7 @@ DEFAULTS = {
     'ssh_import': None,
     'timezone': None,
     'assign_dns': False,  # Hmmm ...?
-    'ec2_zone': 'us-east-1a',
+    'ec2_zone': 'us-east-1b',
     'ec2_instance_type': 'm1.small',
     'ec2_ami_id': None,
     'ec2_distro': None,
@@ -118,6 +118,8 @@ def user_profile(cli, config_dir, profile_name=None):
         else:
             msg = "Unable to find AMI for distro: {0}".format(cli.distro)
             LOG.info(msg)
+    if not profile['ec2_ami_id'] and profile['ec2_distro']:
+        profile['ec2_ami_id'] = shaker.ami.get_ami(profile['ec2_distro'], profile)
     msg = "Selected AMI {0} in zone {1}".format(
         profile['ec2_ami_id'],
         profile['ec2_zone'])

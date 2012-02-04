@@ -88,8 +88,6 @@ class EBSFactory(object):
             block_device_map=block_map,
             user_data=self.user_data)
         self.instance = reservation.instances[0]
-        if self.config['hostname']:
-            self.assign_name_tag()
         secs = RUN_INSTANCE_TIMEOUT
         rest_interval = 5
         while secs and not self.instance.state == 'running':
@@ -104,6 +102,8 @@ class EBSFactory(object):
                 self.instance.id, RUN_INSTANCE_TIMEOUT)
             LOG.error(errmsg)
         else:
+            if self.config['hostname']:
+                self.assign_name_tag()
             msg1 = "Started Instance: {0}\n".format(self.instance.id)
             LOG.info(msg1)
             print msg1
