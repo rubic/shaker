@@ -20,7 +20,7 @@ DEFAULTS = {
     'ssh_import': None,
     'timezone': None,
     'assign_dns': False,  # Hmmm ...?
-    'ec2_zone': 'us-east-1a',
+    'ec2_zone': 'us-east-1b',
     'ec2_instance_type': 'm1.small',
     'ec2_ami_id': None,
     'ec2_distro': None,
