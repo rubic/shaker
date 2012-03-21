@@ -227,6 +227,19 @@ permits port 22 for ssh access.
 
     ec2_security_group: webserver
 
+``ec2_security_groups``
+----------------------
+
+Default: ``[]``
+
+Overrides ``ec2_security_group`` if multiple security groups are needed.
+
+.. code-block:: yaml
+
+    ec2_security_groups:
+      - default
+      - webserver
+
 ``ec2_monitoring_enabled``
 --------------------------
 

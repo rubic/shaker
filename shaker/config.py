@@ -27,6 +27,7 @@ DEFAULTS = {
     'ec2_size': None,
     'ec2_key_name': None,
     'ec2_security_group': 'default',
+    'ec2_security_groups': [],
     'ec2_monitoring_enabled': False,
     'ec2_root_device': '/dev/sda1',
     'ec2_architecture': 'i386',
@@ -225,6 +226,13 @@ DEFAULT_PROFILE = """###########################################################
 ####################################################################
 
 #ec2_security_group: default
+
+####################################################################
+# ec2_security_groups: Overrides ec2_security_group setting if
+# multiple groups are needed.
+####################################################################
+
+#ec2_security_groups: []
 
 ####################################################################
 # ec2_monitoring_enabled:

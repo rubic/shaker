@@ -83,7 +83,7 @@ class EBSFactory(object):
         reservation = self.conn.run_instances(
             self.config['ec2_ami_id'],
             key_name=self.config['ec2_key_name'],
-            security_groups=[self.config['ec2_security_group']],
+            security_groups=self.config['ec2_security_groups'] or [self.config['ec2_security_group']],
             instance_type=self.config['ec2_instance_type'],
             placement=self.config['ec2_zone'],
             monitoring_enabled=self.config['ec2_monitoring_enabled'],
