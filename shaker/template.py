@@ -114,7 +114,7 @@ resize2fs {{ root_device }}
 aptitude -y install python-software-properties && add-apt-repository ppa:chris-lea/libpgm && add-apt-repository ppa:chris-lea/zeromq && add-apt-repository ppa:saltstack/salt && aptitude update
 {% endif %}
 
-apt-get -y install salt
+apt-get -y install salt-minion
 
 MINION_CONFIG=/etc/salt/minion
 cp $MINION_CONFIG.template $MINION_CONFIG
