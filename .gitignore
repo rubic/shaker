@@ -1,11 +1,56 @@
-*.pyc
 build/
 docs/_build/
 dist/
-pip-log.txt
 shaker.egg-info/
 
 
-shaker/shaker.sublime-project
+# Compiled source #
+###################
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.pyc
 
-shaker/shaker.sublime-workspace
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Logs and databases #
+######################
+pip-log.txt
+*.log
+*.sql
+*.sqlite
+*.rdb
+
+# OS generated files #
+######################
+.DS_Store*
+ehthumbs.db
+Icon?
+Thumbs.db
+
+# IDE generated files #
+#######################
+*.sublime-project
+*.sublime-workspace
+.codeintel/*
+.rvmrc
+
+# Django static folder
+static/*
+
+# Reports
+reports/*
