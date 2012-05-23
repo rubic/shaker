@@ -191,10 +191,13 @@ class EBSFactory(object):
             help="Configuration directory")
         parser.add_option(
             '--user-data', dest='user_data_template',
-            help="User data template")
+            help="User data template file")
         parser.add_option(
             '--cloud-init', dest='cloud_init_template',
-            help="cloud-init template")
+            help="cloud-init template file")
+        parser.add_option(
+            '--minion-template', dest='minion_template',
+            help="Minion template file")
         parser.add_option(
             '--dry-run', dest='dry_run',
             action='store_true', default=False,
