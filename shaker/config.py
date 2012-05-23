@@ -33,6 +33,8 @@ DEFAULTS = {
     'ec2_architecture': 'i386',
     'salt_master': None,
     'salt_id': None,
+    'cloud_init_template': None,
+    'user_data_template': None
     }
 
 

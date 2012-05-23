@@ -10,26 +10,49 @@ from jinja2 import FileSystemLoader
 
 from shaker import __version__
 
+import shaker.log
+LOG = shaker.log.getLogger(__name__)
+
 CLOUD_INIT_PREFIX = 'cloud-init'
 USER_SCRIPT_PREFIX = 'user-script'
 
 
 class UserData(object):
     def __init__(self, config):
-        cfg = {'version': __version__}
-        cfg.update(config)
-        self.cloud_init_name = "%s.%s" % (CLOUD_INIT_PREFIX, __version__)
-        self.user_script_name = "%s.%s" % (USER_SCRIPT_PREFIX, __version__)
-        self.template_dir = self.get_template_dir(cfg['config_dir'])
-        env = Environment(loader=FileSystemLoader(self.template_dir))
-        self.user_script = re.sub(
-            '\n\n+',
-            '\n\n',
-            env.get_template(self.user_script_name).render(cfg))
-        self.cloud_init = re.sub(
-            '\n\n+',
-            '\n\n',
-            env.get_template(self.cloud_init_name).render(cfg))
+        self.config = config
+        self.config.update({'version': __version__})
+        self.template_dir = self.get_template_dir(self.config['config_dir'])
+        self.env = self.get_jinja_env()
+        self.user_script = re.sub('\n\n+', '\n\n', self.render_template('user_data_template', default_contents=USER_SCRIPT))
+        self.cloud_init = re.sub('\n\n+', '\n\n', self.render_template('cloud_init_template', default_contents=CLOUD_INIT))
+
+    def get_jinja_env(self):
+        ## Using '/' in loader allows to check for absolute paths.
+        loader = FileSystemLoader([os.getcwd(), self.template_dir, '/'])
+        env = Environment(loader=loader)
+        return env
+
+    def render_template(self, template_arg, default_contents=None):
+        """
+        Retrieve rendered template text from file.
+        """
+        if template_arg == 'cloud_init_template':
+            prefix = 'cloud-init'
+        else:
+            prefix = 'user-script'
+
+        if self.config[template_arg] == None:
+            template_name = "%s.%s" % (prefix, __version__)
+            template_path = os.path.join(self.template_dir, template_name)
+            ## Create from default if it doesn't exist.
+            if not os.path.isfile(template_path):
+                template_file = open(template_path, 'w')
+                template_file.write(default_contents)
+                template_file.close()
+        else:
+            template_name = self.config[template_arg]
+
+        return self.env.get_template(template_name).render(self.config)
 
     def get_template_dir(self, config_dir):
         """Return the template directory name, creating the
@@ -38,12 +61,6 @@ class UserData(object):
         template_dir = os.path.join(config_dir, 'templates')
         if not os.path.isdir(template_dir):
             os.makedirs(template_dir)
-        for filename, template in [(self.cloud_init_name, CLOUD_INIT),
-                                   (self.user_script_name, USER_SCRIPT),]:
-            path = os.path.join(template_dir, filename)
-            if not os.path.isfile(path):
-                with open(path, 'w') as f:
-                    f.write(template)
         return template_dir
 
 

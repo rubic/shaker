@@ -190,6 +190,12 @@ class EBSFactory(object):
             '--config-dir', dest='config_dir',
             help="Configuration directory")
         parser.add_option(
+            '--user-data', dest='user_data_template',
+            help="User data template")
+        parser.add_option(
+            '--cloud-init', dest='cloud_init_template',
+            help="cloud-init template")
+        parser.add_option(
             '--dry-run', dest='dry_run',
             action='store_true', default=False,
             help="Log the initialization setup, but don't launch the instance")
