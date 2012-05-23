@@ -164,7 +164,11 @@ MINION_TEMPLATE = """master: {{ salt_master }}
 # Since salt uses detached ids it is possible to run multiple minions on the
 # same machine but with different ids, this can be useful for salt compute
 # clusters.
+{% if salt_id %}
 id: {{ salt_id }}
+{% else %}
+#id:
+{% endif %}
 
 # Append a domain to a hostname in the event that it does not exist.  This is
 # usefule for systems where socket.getfqdn() does not actually result in a
