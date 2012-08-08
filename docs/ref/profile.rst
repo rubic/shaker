@@ -240,6 +240,18 @@ Overrides ``ec2_security_group`` if multiple security groups are needed.
       - default
       - webserver
 
+``ec2_placement_group``
+----------------------
+
+Default: ``None``
+
+The placement group of the instance. Typically used for high
+performance computing.
+
+.. code-block:: yaml
+
+    ec2_placement_group: hpc_cluster
+
 ``ec2_monitoring_enabled``
 --------------------------
 
