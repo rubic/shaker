@@ -68,7 +68,7 @@ class EBSFactory(object):
     def get_connection(self):
         regions = boto.ec2.regions()
         region = [x.name for x in regions if x.name.startswith(
-            self.config['ec2_zone'][:-1])][0]
+            self.config['ec2_zone'])][0]
         return regions[[x.name for x in regions].index(region)].connect()
 
     def launch_instance(self):
@@ -85,7 +85,7 @@ class EBSFactory(object):
             key_name=self.config['ec2_key_name'],
             security_groups=self.config['ec2_security_groups'] or [self.config['ec2_security_group']],
             instance_type=self.config['ec2_instance_type'],
-            placement=self.config['ec2_zone'],
+            placement_group=self.config['ec2_placement_group'],
             monitoring_enabled=self.config['ec2_monitoring_enabled'],
             block_device_map=block_map,
             user_data=self.user_data)
@@ -186,6 +186,9 @@ class EBSFactory(object):
         parser.add_option('--ec2-group', dest='ec2_security_group')
         parser.add_option('--ec2-key', dest='ec2_key_name')
         parser.add_option('--ec2-zone', dest='ec2_zone', default='')
+        parser.add_option('--instance-type', dest='ec2_instance_type',
+                          help="One of t1.micro, m1.small, ...")
+        parser.add_option('--placement-group', dest='ec2_placement_group')
         parser.add_option(
             '--config-dir', dest='config_dir',
             help="Configuration directory")

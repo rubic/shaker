@@ -31,6 +31,7 @@ DEFAULTS = {
     'ec2_monitoring_enabled': False,
     'ec2_root_device': '/dev/sda1',
     'ec2_architecture': 'i386',
+    'ec2_placement_group': None,
     'salt_master': None,
     'salt_id': None,
     'cloud_init_template': None,
