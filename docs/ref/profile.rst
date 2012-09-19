@@ -130,7 +130,7 @@ EC2-Specific Configuration Options
 ``ec2_zone``
 ------------
 
-Default: ``us-east-1b``
+Default: ``us-east-1``
 
 Specify the
 `zone <http://aws.amazon.com/ec2/faqs/#How_isolated_are_Availability_Zones_from_one_another>`_
@@ -138,7 +138,7 @@ to start the instance.   The default may be changed in ``~/.shaker/profile/defau
 
 .. code-block:: yaml
 
-    ec2_zone: us-west-1a
+    ec2_zone: us-west-1
 
 
 ``ec2_instance_type``
@@ -250,7 +250,7 @@ performance computing.
 
 .. code-block:: yaml
 
-    ec2_placement_group: hpc_cluster
+    ec2_placement_group: us-east-1b
 
 ``ec2_monitoring_enabled``
 --------------------------

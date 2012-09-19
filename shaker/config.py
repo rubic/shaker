@@ -20,7 +20,7 @@ DEFAULTS = {
     'ssh_import': None,
     'timezone': None,
     'assign_dns': False,  # Hmmm ...?
-    'ec2_zone': 'us-east-1b',
+    'ec2_zone': 'us-east-1',
     'ec2_instance_type': 'm1.small',
     'ec2_ami_id': None,
     'ec2_distro': None,
@@ -174,9 +174,11 @@ DEFAULT_PROFILE = """###########################################################
 
 ####################################################################
 # ec2_zone: if not specified, defaults to arbitrary us-east zone
+# ec2_placement_group: specific placement (aka zone) of an instance
 ####################################################################
 
 #ec2_zone: {{ ec2_zone }}
+#ec2_placement_group': {{ ec2_zone }}a
 
 ####################################################################
 # ec2_instance_type defaults to m1.small
