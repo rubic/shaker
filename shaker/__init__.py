@@ -58,7 +58,10 @@ class EBSFactory(object):
             if self.dry_run:
                 print user_data_msg
             self.conn = self.get_connection()
-            if self.verify_settings() and not self.dry_run:
+            if not self.conn:
+                errmsg = "Unable to establish a connection for: %s" % self.config['ec2_zone']
+                LOG.error(errmsg)
+            elif self.verify_settings() and not self.dry_run:
                 self.launch_instance()
                 if self.config['assign_dns']:
                     #XXX - Not yet implemented
@@ -67,9 +70,14 @@ class EBSFactory(object):
 
     def get_connection(self):
         regions = boto.ec2.regions()
-        region = [x.name for x in regions if x.name.startswith(
-            self.config['ec2_zone'])][0]
-        return regions[[x.name for x in regions].index(region)].connect()
+        try:
+            region = [x.name for x in regions if self.config['ec2_zone'].startswith(x.name)][0]
+            conn = regions[[x.name for x in regions].index(region)].connect()
+        except IndexError:
+            errmsg = "Unable to determine region from ec2_zone: %s" % self.config['ec2_zone']
+            LOG.error(errmsg)
+            conn = None
+        return conn
 
     def launch_instance(self):
         if not self.verify_settings():
@@ -155,8 +163,12 @@ class EBSFactory(object):
             # If no key pair has been specified, just use the first one,
             # iff it's the only one.
             key_pairs = self.conn.get_all_key_pairs()
-            if len(key_pairs) > 1:
-                LOG.error("Missing ec2_key_name parameter")
+            if len(key_pairs) < 1:
+                LOG.error("No key pair available for region: %s" % self.conn)
+            elif len(key_pairs) > 1:
+                errmsg = "Must specify ec2_key_name: %s" % (
+                    ', '.join([kp.name for kp in key_pairs]))
+                LOG.error(errmsg)
                 return False
             self.config['ec2_key_name'] = [kp.name for kp in key_pairs][0]
         if self.config['ec2_size']:

@@ -141,7 +141,7 @@ cat > /etc/salt/minion <<EOF
 {{ rendered_minion_template }}
 EOF
 
-salt-minion -d
+service salt-minion restart
 {% endif %}
 """
 
@@ -277,7 +277,7 @@ id: {{ salt_id }}
 # the master but used to reference a local directory on the minion.
 
 # Set the file client, the client defaults to looking on the master server for
-# files, but can be directed to look at the local file directory setting 
+# files, but can be directed to look at the local file directory setting
 # defined below by setting it to local.
 #file_client: remote
 

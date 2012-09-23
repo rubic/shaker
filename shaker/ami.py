@@ -8,7 +8,7 @@ Select the AMI from specified distro
 >>> distro = 'ubuntu'
 >>> profile = {'ec2_zone': 'us-west-1a'}
 >>> get_ami(distro, profile)
-'ami-3f94ca7a'
+'ami-d50c2890'
 
 >>> distro = 'lucid'
 >>> get_ami(distro, profile)
@@ -72,7 +72,7 @@ def lsb(distro):
 
 EBSImages = """# Amazon EC2 AMIs - EBS Images
 release:
-  ubuntu: oneiric
+  ubuntu: precise
   debian: squeeze
 
 ubuntu:
@@ -161,6 +161,28 @@ ubuntu:
     us-west-2:
       i386: ami-8cb33ebc
       x86_64: ami-8eb33ebe
+  precise:
+    ap-northeast-1:
+      i386: ami-bc47fabd
+      x86_64: ami-c047fac1
+    ap-southeast-1:
+      i386: ami-e4db9ab6
+      x86_64: ami-eadb9ab8
+    eu-west-1:
+      i386: ami-d1595fa5
+      x86_64: ami-db595faf
+    sa-east-1:
+      i386: ami-32845d2f
+      x86_64: ami-2e845d33
+    us-east-1:
+      i386: ami-057bcf6c
+      x86_64: ami-137bcf7a
+    us-west-1:
+      i386: ami-d50c2890
+      x86_64: ami-d70c2892
+    us-west-2:
+      i386: ami-1add532a
+      x86_64: ami-1cdd532c
 
 debian:
   squeeze:
