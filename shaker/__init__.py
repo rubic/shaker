@@ -15,6 +15,7 @@ import shaker.config
 import shaker.template
 LOG = shaker.log.getLogger(__name__)
 RUN_INSTANCE_TIMEOUT = 180  # seconds
+DEFAULT_MINION_PKI_DIR = '/etc/salt/pki/minions'
 
 InstanceTypes = [
     't1.micro',
@@ -39,34 +40,45 @@ class EBSFactory(object):
             config_dir,
             profile)
         self.dry_run = cli.dry_run
-        self.to_profile = cli.to_profile
+        self.pre_seed = cli.pre_seed
+        self.minion_pki_dir = cli.minion_pki_dir or DEFAULT_MINION_PKI_DIR
         self.config = dict(self.profile)
         self.config['config_dir'] = config_dir
         (self.config['lsb_distributor'],
          self.config['lsb_codename']) = shaker.ami.lsb(self.config['ec2_distro'])
 
     def process(self):
-        if self.to_profile:
-            shaker.config.create_profile(
-                self.profile,
-                self.config['config_dir'],
-                self.to_profile)
-        else:
-            self.user_data = self.build_mime_multipart()
-            user_data_msg = "User Data Follows\n{0}".format(self.user_data)
-            LOG.info(user_data_msg)
-            if self.dry_run:
-                print user_data_msg
-            self.conn = self.get_connection()
-            if not self.conn:
-                errmsg = "Unable to establish a connection for: %s" % self.config['ec2_zone']
-                LOG.error(errmsg)
-            elif self.verify_settings() and not self.dry_run:
-                self.launch_instance()
-                if self.config['assign_dns']:
-                    #XXX - Not yet implemented
-                    LOG.info("assign_dns not yet implemented")
-                    self.assign_dns(self.config['assign_dns'])
+        self.user_data = self.build_mime_multipart()
+        user_data_msg = "User Data Follows\n{0}".format(self.user_data)
+        LOG.info(user_data_msg)
+        if self.dry_run:
+            print user_data_msg
+        self.conn = self.get_connection()
+        if not self.conn:
+            errmsg = "Unable to establish a connection for: %s" % self.config['ec2_zone']
+            LOG.error(errmsg)
+            return False
+        if not self.verify_settings():
+            return False
+
+#### REMOVE BELOW AFTER TESTING
+        if self.pre_seed:
+            self.pre_seed_minion()
+#### REMOVE ABOVE AFTER TESTING
+
+        if self.dry_run:
+            return True
+
+        if self.pre_seed:
+            if not self.pre_seed_minion():
+                return False
+
+        self.launch_instance()
+
+        if self.config['assign_dns']:
+            LOG.info("assign_dns not yet implemented") #XXX Not yet implemented
+            self.assign_dns(self.config['assign_dns'])
+        return True
 
     def get_connection(self):
         regions = boto.ec2.regions()
@@ -130,6 +142,22 @@ class EBSFactory(object):
                        self.instance.id)
             LOG.info(msg2)
             print msg2
+
+    def pre_seed_minion(self):
+        """Pre-seed minion keys, updating the master pki
+        """
+        # determine if writable: self.minion_pki_dir
+        #from IPython import embed; embed() #XXX
+        if self.config.get('salt_id'):
+            keyname = self.config['salt_id']
+        elif self.config.get('hostname'):
+            keyname = "%s.%s" % (
+                self.config['hostname'],
+                self.config['domain']) if self.config.get('domain') else self.config['hostname']
+        else:
+            LOG.error("Must specify salt_id or hostname")
+            return False
+        return True
 
     def assign_name_tag(self):
         """Assign the 'Name' tag to the instance, but only if it
@@ -218,11 +246,6 @@ class EBSFactory(object):
             action='store_true', default=False,
             help="Log the initialization setup, but don't launch the instance")
         parser.add_option(
-            '--to-profile', dest='to_profile',
-            default=False,
-            help="Save options to a specified profile"
-        )
-        parser.add_option(
             '-m', '--master', dest='salt_master',
             metavar='SALT_MASTER', default='',
             help="Connect salt minion to SALT_MASTER")
@@ -234,6 +257,14 @@ class EBSFactory(object):
             '--domain', dest='domain',
             metavar='DOMAIN', default='',
             help="Assign DOMAIN name to salt minion")
+        parser.add_option(
+            '--preseed', dest='pre_seed',
+            action='store_true', default=False,
+            help="Pre-seed the minion keys")
+        parser.add_option(
+            '--minion-pki-dir', dest='minion_pki_dir',
+            metavar='PKI_DIR', default=DEFAULT_MINION_PKI_DIR,
+            help="Minion PKI_DIR, when pre-seeding minion keys")
         import shaker.log
         parser.add_option('-l',
                 '--log-level',
