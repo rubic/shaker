@@ -179,8 +179,8 @@ Default: ``ubuntu``
 Specify the distribution to launch: *precise*, *oneiric*, *natty*, *maverick*, *lucid*,
 or generically, *ubuntu*.
 
-*Note: Only ``oneiric`` is currently guaranteed to work, until the
-packaging is back ported.*
+*Note: Only ``lucid`` and ``precise`` (or later) are likely to work, until the Salt
+packaging is back ported to other non-LTS distributions.*
 
 *TODO: Add support for Debian, Fedora, etc.*
 
@@ -228,7 +228,7 @@ permits port 22 for ssh access.
     ec2_security_group: webserver
 
 ``ec2_security_groups``
-----------------------
+-----------------------
 
 Default: ``[]``
 
@@ -241,7 +241,7 @@ Overrides ``ec2_security_group`` if multiple security groups are needed.
       - webserver
 
 ``ec2_placement_group``
-----------------------
+-----------------------
 
 Default: ``None``
 
