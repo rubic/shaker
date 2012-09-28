@@ -1,3 +1,4 @@
 boto>=2.0
 Jinja2
 PyYAML
+M2Crypto

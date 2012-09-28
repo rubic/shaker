@@ -4,9 +4,12 @@ Build and launch EBS instances as salt minions.
 from shaker.version import __version__
 
 import os
+import sys
 import time
 import optparse
 import email.mime
+from tempfile import TemporaryFile
+from M2Crypto import BIO, RSA, m2
 import boto
 import boto.ec2
 from boto.ec2.blockdevicemapping import EBSBlockDeviceType, BlockDeviceMapping
@@ -39,6 +42,8 @@ class EBSFactory(object):
             cli,
             config_dir,
             profile)
+        self.pki_dir = shaker.config.get_pki_dir(config_dir)
+        self.userdata_dir = shaker.config.get_userdata_dir(config_dir)
         self.dry_run = cli.dry_run
         self.pre_seed = cli.pre_seed
         self.minion_pki_dir = cli.minion_pki_dir or DEFAULT_MINION_PKI_DIR
@@ -48,33 +53,24 @@ class EBSFactory(object):
          self.config['lsb_codename']) = shaker.ami.lsb(self.config['ec2_distro'])
 
     def process(self):
+        if self.pre_seed:
+            if not self.generate_minion_keys():
+                return False
         self.user_data = self.build_mime_multipart()
-        user_data_msg = "User Data Follows\n{0}".format(self.user_data)
-        LOG.info(user_data_msg)
-        if self.dry_run:
-            print user_data_msg
+        self.write_user_data()
         self.conn = self.get_connection()
         if not self.conn:
-            errmsg = "Unable to establish a connection for: %s" % self.config['ec2_zone']
+            errmsg = "Unable to establish a connection for: {0}".format(
+                self.config['ec2_zone'])
             LOG.error(errmsg)
             return False
         if not self.verify_settings():
             return False
-
-#### REMOVE BELOW AFTER TESTING
-        if self.pre_seed:
-            self.pre_seed_minion()
-#### REMOVE ABOVE AFTER TESTING
-
         if self.dry_run:
             return True
-
         if self.pre_seed:
-            if not self.pre_seed_minion():
-                return False
-
+            self.pre_seed_minion()
         self.launch_instance()
-
         if self.config['assign_dns']:
             LOG.info("assign_dns not yet implemented") #XXX Not yet implemented
             self.assign_dns(self.config['assign_dns'])
@@ -86,7 +82,8 @@ class EBSFactory(object):
             region = [x.name for x in regions if self.config['ec2_zone'].startswith(x.name)][0]
             conn = regions[[x.name for x in regions].index(region)].connect()
         except IndexError:
-            errmsg = "Unable to determine region from ec2_zone: %s" % self.config['ec2_zone']
+            errmsg = "Unable to determine region from ec2_zone: {0}".format(
+                self.config['ec2_zone'])
             LOG.error(errmsg)
             conn = None
         return conn
@@ -120,7 +117,7 @@ class EBSFactory(object):
             except boto.exception.EC2ResponseError:
                 pass
         if secs <= 0:
-            errmsg = "run instance %s failed after %d seconds" % (
+            errmsg = "run instance {0} failed after {1} seconds".format(
                 self.instance.id, RUN_INSTANCE_TIMEOUT)
             LOG.error(errmsg)
         else:
@@ -134,29 +131,85 @@ class EBSFactory(object):
             ## change user to 'root' for all non-Ubuntu systems
             user = self.config['sudouser'] if self.config['sudouser'] and self.config['ssh_import'] else 'ubuntu'
             #XXX - TODO: replace public dns with fqdn, where appropriate
-            msg2 = "To access: ssh {0}{1}@{2}\n" \
-                   "To terminate: shaker-terminate {3}".format(
-                       port,
-                       user,
-                       self.instance.public_dns_name,
+            msg2 = "To access: ssh {0}{1}@{2}\n".format(
+                '-p {0} '.format(port) if port else '',
+                user,
+                self.instance.public_dns_name)
+            msg3 = "To terminate: shaker-terminate {0}".format(
                        self.instance.id)
             LOG.info(msg2)
+            LOG.info(msg3)
             print msg2
+            print msg3
+
+    def write_user_data(self):
+        pathname = os.path.join(self.userdata_dir, self.get_keyname())
+        with open(pathname, 'w') as f:
+            f.write('{0}\n'.format(self.user_data))
+        LOG.info("user data written to {0}".format(pathname))
 
     def pre_seed_minion(self):
-        """Pre-seed minion keys, updating the master pki
+        """Pre-seed minion keys, updating /etc/salt/pki/minion
         """
-        # determine if writable: self.minion_pki_dir
-        #from IPython import embed; embed() #XXX
+        if not os.access(self.minion_pki_dir, os.W_OK | os.X_OK):
+            errmsg = "directory not writeable: {0}".format(self.minion_pki_dir)
+            LOG.error(errmsg)
+            return False
+        keyname = self.get_keyname()
+        #XXX TODO: update /etc/salt/pki/minion
+        return True
+
+    def get_keyname(self):
         if self.config.get('salt_id'):
             keyname = self.config['salt_id']
         elif self.config.get('hostname'):
-            keyname = "%s.%s" % (
-                self.config['hostname'],
-                self.config['domain']) if self.config.get('domain') else self.config['hostname']
+            if self.config.get('domain'):
+                keyname = "{0}.{1}".format(
+                    self.config['hostname'],
+                    self.config['domain'])
+            else:
+                keyname = self.config['hostname']
         else:
+            keyname = None
+        return keyname
+
+    def generate_minion_keys(self):
+        #XXX TODO: Replace M2Crypto with PyCrypto
+        # see: https://github.com/saltstack/salt/pull/1112/files
+        # generate keys
+        keyname = self.get_keyname()
+        if not keyname:
             LOG.error("Must specify salt_id or hostname")
             return False
+        gen = RSA.gen_key(2048, 1, callback=lambda x,y,z:None)
+        pubpath = os.path.join(self.pki_dir,
+                               '{0}.pub'.format(keyname))
+        gen.save_pub_key(pubpath)
+        LOG.info("public key {0}".format(pubpath))
+        if self.config.get('save_keys'):
+            cumask = os.umask(191)
+            gen.save_key(
+                os.path.join(
+                    self.pki_dir,
+                    '{0}.pem'.format(keyname)),
+                None)
+            os.umask(cumask)
+        # public key
+        _pub = TemporaryFile()
+        bio_pub = BIO.File(_pub)
+        m2.rsa_write_pub_key(gen.rsa, bio_pub._ptr())
+        _pub.seek(0)
+        self.public_key = _pub.read()
+        self.config['formatted_public_key'] = '\n'.join(
+            "    {0}".format(k) for k in self.public_key.split('\n'))
+        # private key
+        _pem = TemporaryFile()
+        bio_pem = BIO.File(_pem)
+        gen.save_key_bio(bio_pem, None)
+        _pem.seek(0)
+        self.private_key = _pem.read()
+        self.config['formatted_private_key'] = '\n'.join(
+            "    {0}".format(k) for k in self.private_key.split('\n'))
         return True
 
     def assign_name_tag(self):
@@ -192,9 +245,9 @@ class EBSFactory(object):
             # iff it's the only one.
             key_pairs = self.conn.get_all_key_pairs()
             if len(key_pairs) < 1:
-                LOG.error("No key pair available for region: %s" % self.conn)
+                LOG.error("No key pair available for region: {0}" % self.conn)
             elif len(key_pairs) > 1:
-                errmsg = "Must specify ec2_key_name: %s" % (
+                errmsg = "Must specify ec2_key_name: {0}" % (
                     ', '.join([kp.name for kp in key_pairs]))
                 LOG.error(errmsg)
                 return False
@@ -215,7 +268,7 @@ class EBSFactory(object):
     def parse_cli(self):
         parser = optparse.OptionParser(
             usage="%prog [options] profile",
-            version="%%prog %s" % __version__)
+            version="%%prog {0}".format(__version__))
         parser.add_option(
             '-a', '--ami', dest='ec2_ami_id', metavar='AMI',
             help='Build instance from AMI')
@@ -262,6 +315,10 @@ class EBSFactory(object):
             action='store_true', default=False,
             help="Pre-seed the minion keys")
         parser.add_option(
+            '--save-keys', dest='save_keys',
+            action='store_true', default=False,
+            help="Save keys locally, including the pre-seeded private key")
+        parser.add_option(
             '--minion-pki-dir', dest='minion_pki_dir',
             metavar='PKI_DIR', default=DEFAULT_MINION_PKI_DIR,
             help="Minion PKI_DIR, when pre-seeding minion keys")
@@ -271,8 +328,8 @@ class EBSFactory(object):
                 dest='log_level',
                 default='info',
                 choices=shaker.log.LOG_LEVELS.keys(),
-                help='Log level: %s.  \nDefault: %%default' %
-                     ', '.join(shaker.log.LOG_LEVELS.keys())
+                help='Log level: {0}.  \nDefault: %%default'.format(
+                     ', '.join(shaker.log.LOG_LEVELS.keys()))
                 )
         (opts, args) = parser.parse_args()
         if len(args) < 1:
@@ -292,4 +349,5 @@ class EBSFactory(object):
             opts.log_level)
         if opts.ec2_ami_id:
             opts.distro = ''  # mutually exclusive
+        LOG.info("shaker invoked with args: {0}".format(', '.join(sys.argv[1:])))
         return opts, config_dir, profile

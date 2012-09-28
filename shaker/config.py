@@ -56,6 +56,20 @@ def get_config_dir(path=None):
     return config_dir
 
 
+def get_pki_dir(config_dir):
+    pki_dir = os.path.join(config_dir, 'pki')
+    if not os.path.isdir(pki_dir):
+        os.makedirs(pki_dir)
+    return pki_dir
+
+
+def get_userdata_dir(config_dir):
+    userdata_dir = os.path.join(config_dir, 'userdata')
+    if not os.path.isdir(userdata_dir):
+        os.makedirs(userdata_dir)
+    return userdata_dir
+
+
 def default_profile(config_dir):
     profile_dir = os.path.join(config_dir, 'profile')
     default_profile = os.path.join(profile_dir, 'default')
@@ -140,6 +154,20 @@ DEFAULT_PROFILE = """###########################################################
 
 #hostname:
 #domain:
+
+####################################################################
+# salt_master is the location (dns or ip) of the salt master
+# to connect to, e.g.: master.example.com
+####################################################################
+
+#salt_master:
+
+####################################################################
+# salt_id identifies this salt minion.  If not specified,
+# defaults to the fully qualified hostname.
+####################################################################
+
+#salt_id:
 
 ####################################################################
 # Install the user with sudo privileges.  If sudouser is listed
@@ -251,18 +279,4 @@ DEFAULT_PROFILE = """###########################################################
 ####################################################################
 
 #ec2_root_device: /dev/sda1
-
-####################################################################
-# salt_master is the location (dns or ip) of the salt master
-# to connect to, e.g.: master.example.com
-####################################################################
-
-#salt_master:
-
-####################################################################
-# salt_id identifies this salt minion.  If not specified,
-# defaults to the fully qualified hostname.
-####################################################################
-
-#salt_id:
 """
