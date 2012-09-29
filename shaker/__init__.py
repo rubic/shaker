@@ -199,7 +199,7 @@ class EBSFactory(object):
         bio_pub = BIO.File(_pub)
         m2.rsa_write_pub_key(gen.rsa, bio_pub._ptr())
         _pub.seek(0)
-        self.public_key = _pub.read()
+        self.config['public_key'] = self.public_key = _pub.read()
         self.config['formatted_public_key'] = '\n'.join(
             "    {0}".format(k) for k in self.public_key.split('\n'))
         # private key
@@ -207,7 +207,7 @@ class EBSFactory(object):
         bio_pem = BIO.File(_pem)
         gen.save_key_bio(bio_pem, None)
         _pem.seek(0)
-        self.private_key = _pem.read()
+        self.config['private_key'] = self.private_key = _pem.read()
         self.config['formatted_private_key'] = '\n'.join(
             "    {0}".format(k) for k in self.private_key.split('\n'))
         return True

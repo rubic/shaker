@@ -137,13 +137,48 @@ resize2fs {{ root_device }}
 aptitude -y install python-software-properties && add-apt-repository ppa:chris-lea/libpgm && add-apt-repository ppa:chris-lea/zeromq && add-apt-repository ppa:saltstack/salt && aptitude update
 {% endif %}
 
-#apt-get -y install salt-minion
-#service salt-minion restart
+apt-get -y install salt-minion
+
+service salt-minion stop
+
+cat > /etc/salt/minion <<EOF1
+{{ rendered_minion_template }}
+EOF1
+
+{% if public_key %}
+cat > /etc/salt/pki/minion.pub <<EOF2
+{{ public_key }}
+EOF2
+{% endif %}
+
+{% if private_key %}
+cat > /etc/salt/pki/minion.pem <<EOF3
+{{ private_key }}
+chmod 600 /etc/salt/pki/minion.pem
+EOF3
+{% endif %}
+
+service salt-minion start
 {% endif %}
 """
 
+# MINION_TEMPLATE has been reverted due to a bug in ubuntu cloud-init:
+# https://bugs.launchpad.net/bugs/996166
+# When the bug is available in the distro, replace MINION_TEMPLATE
+# with _MINION_TEMPLATE.
 
-MINION_TEMPLATE = """
+MINION_TEMPLATE = """master: {{ salt_master }}
+# Explicitly declare the id for this minion to use, if left commented the
+# id will be the hostname as returned by the python call: socket.getfqdn()
+{% if salt_id %}
+id: {{ salt_id }}
+{% else %}
+#id:
+{% endif %}
+"""
+
+# Re-enable this version when bug 996166 is fixed.
+_MINION_TEMPLATE = """
 salt_minion:
   # conf contains all the directives to be assigned in /etc/salt/minion.
 
