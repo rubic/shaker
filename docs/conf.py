@@ -12,9 +12,6 @@
 # serve to show the default.
 
 import sys, os
-import shaker
-from shaker import __version__
-
 
 class Mock(object):
     '''
@@ -47,6 +44,9 @@ MOCK_MODULES = [
 
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()
+
+import shaker
+from shaker import __version__
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the

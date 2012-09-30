@@ -22,7 +22,7 @@ have it connect upon boot to Salt master *salt.example.com*:
 
 ::
 
-    $ shaker --distro ubuntu --master salt.example.com
+    $ shaker --ami ami-057bcf6c --master salt.example.com
 
     Started Instance: i-9175d8f4
 
