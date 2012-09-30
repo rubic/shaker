@@ -71,7 +71,7 @@ class UserData(object):
 CLOUD_INIT = """#cloud-config
 # Shaker version: {{ version }}
 {% if salt_master %}
-{% if not ec2_distro in ['lucid', 'maverick', 'natty'] %}
+{% if not ubuntu_release in ['lucid', 'maverick', 'natty'] %}
 apt_sources:
   - source: "ppa:saltstack/salt"
 
@@ -133,7 +133,7 @@ resize2fs {{ root_device }}
 {% if salt_master %}
 # Install salt-minion and run as daemon
 
-{% if ec2_distro in ['lucid', 'maverick'] %}
+{% if ubuntu_release in ['lucid', 'maverick'] %}
 aptitude -y install python-software-properties && add-apt-repository ppa:chris-lea/libpgm && add-apt-repository ppa:chris-lea/zeromq && add-apt-repository ppa:saltstack/salt && aptitude update
 {% endif %}
 

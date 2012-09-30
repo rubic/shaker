@@ -54,3 +54,6 @@ static/*
 
 # Reports
 reports/*
+
+# Dev Utils
+_rebuild.sh

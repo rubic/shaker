@@ -23,7 +23,7 @@ DEFAULTS = {
     'ec2_zone': 'us-east-1b',
     'ec2_instance_type': 'm1.small',
     'ec2_ami_id': None,
-    'ec2_distro': None,
+    'ubuntu_release': None,
     'ec2_size': None,
     'ec2_key_name': None,
     'ec2_security_group': 'default',
@@ -133,14 +133,14 @@ def user_profile(cli, config_dir, profile_name=None):
     # If the distro is specified in the command-line, we override
     # the profile ec2_ami_id value.
     if cli.distro:
-        ec2_ami_id = shaker.ami.get_ami(cli.distro, profile)
+        ec2_ami_id = shaker.ami.get_ami(profile, cli.distro)
         if ec2_ami_id:
             profile['ec2_ami_id'] = ec2_ami_id
         else:
             msg = "Unable to find AMI for distro: {0}".format(cli.distro)
             LOG.info(msg)
-    if not profile['ec2_ami_id'] and profile['ec2_distro']:
-        profile['ec2_ami_id'] = shaker.ami.get_ami(profile['ec2_distro'], profile)
+    if not profile['ec2_ami_id'] and profile['ubuntu_release']:
+        profile['ec2_ami_id'] = shaker.ami.get_ami(profile['ubuntu_release'], profile)
     msg = "Selected AMI {0} in zone {1}".format(
         profile['ec2_ami_id'],
         profile['ec2_zone'])
@@ -222,18 +222,18 @@ DEFAULT_PROFILE = """###########################################################
 ####################################################################
 # ec2_ami_id: AMI image to launch.  Note AMI's are
 # region-specific, so you must specify the the appropriate AMI
-# for the ec2_zone above.  ec2_ami_id overrides ec2_distro
+# for the ec2_zone above.  ec2_ami_id overrides ubuntu_release
 # below.
 ####################################################################
 
 #ec2_ami_id:
 
 ####################################################################
-# ec2_distro: precise, oneiric, natty, maverick, lucid, hardy
+# ubuntu_release: precise, oneiric, natty, maverick, lucid, hardy
 # TODO: add support for Debian: sid, etc.
 ####################################################################
 
-#ec2_distro: {{ ec2_distro }}
+#ubuntu_release: {{ ubuntu_release }}
 
 ####################################################################
 # ec2_size: size of the root file partition in GB.  If not

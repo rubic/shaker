@@ -123,6 +123,19 @@ non-standard ssh port, but verify it's open in your
 
     ssh_port: 6222
 
+``ubuntu_release``
+--------------
+
+Default: ``precise``
+
+Specify the distribution to launch: *precise*, *oneiric*, *natty*, *maverick*, or *lucid*.
+
+*Note: Only* ``lucid`` *and* ``precise`` *(or later) are likely to work, until the Salt
+packaging is backported to other non-LTS distributions.*
+
+.. code-block:: yaml
+
+    ubuntu_release: lucid
 
 EC2-Specific Configuration Options
 ----------------------------------
@@ -165,28 +178,11 @@ Default: None
 The `AMI <http://aws.amazon.com/amis>`_ id of the image to launch.
 Note that AMI's are region-specific, so you must specify the the
 appropriate AMI for the specific ``ec2_zone``.  Specifying
-``ec2_ami_id`` overrides ``ec2_distro`` below.
+``ec2_ami_id`` overrides ``ubuntu_release`` below.
 
 .. code-block:: yaml
 
     ec2_ami_id: ami-6ba27502
-
-``ec2_distro``
---------------
-
-Default: ``ubuntu``
-
-Specify the distribution to launch: *precise*, *oneiric*, *natty*, *maverick*, *lucid*,
-or generically, *ubuntu*.
-
-*Note: Only ``lucid`` and ``precise`` (or later) are likely to work, until the Salt
-packaging is back ported to other non-LTS distributions.*
-
-*TODO: Add support for Debian, Fedora, etc.*
-
-.. code-block:: yaml
-
-    ec2_distro: oneiric
 
 ``ec2_size``
 ------------

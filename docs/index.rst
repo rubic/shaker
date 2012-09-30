@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Shaker: A Salt Minion Factory for EC2 Instances
-===============================================
+Shaker: A Salt Minion Factory for EC2 Ubuntu Server Instances
+=============================================================
 
 Release v\ |version|.
 
@@ -29,7 +29,7 @@ have it connect upon boot to Salt master *salt.example.com*:
 
 ::
 
-    $ shaker --distro ubuntu --master salt.example.com
+    $ shaker --ami ami-057bcf6c --master salt.example.com
 
     Started Instance: i-9175d8f4
 

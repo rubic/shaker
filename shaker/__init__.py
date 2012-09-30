@@ -46,18 +46,19 @@ class EBSFactory(object):
         self.userdata_dir = shaker.config.get_userdata_dir(config_dir)
         self.dry_run = cli.dry_run
         self.pre_seed = cli.pre_seed
+        self.write_user_data = cli.write_user_data
         self.minion_pki_dir = cli.minion_pki_dir or DEFAULT_MINION_PKI_DIR
         self.config = dict(self.profile)
         self.config['config_dir'] = config_dir
-        (self.config['lsb_distributor'],
-         self.config['lsb_codename']) = shaker.ami.lsb(self.config['ec2_distro'])
 
     def process(self):
         if self.pre_seed:
             if not self.generate_minion_keys():
                 return False
         self.user_data = self.build_mime_multipart()
-        self.write_user_data()
+        if self.write_user_data or (
+            self.get_keyname() and not self.pre_seed and not self.dry_run):
+            self.write_user_data_to_file()
         self.conn = self.get_connection()
         if not self.conn:
             errmsg = "Unable to establish a connection for: {0}".format(
@@ -142,11 +143,15 @@ class EBSFactory(object):
             print msg2
             print msg3
 
-    def write_user_data(self):
-        pathname = os.path.join(self.userdata_dir, self.get_keyname())
-        with open(pathname, 'w') as f:
-            f.write('{0}\n'.format(self.user_data))
-        LOG.info("user data written to {0}".format(pathname))
+    def write_user_data_to_file(self):
+        keyname = self.get_keyname()
+        if keyname:
+            pathname = os.path.join(self.userdata_dir, keyname)
+            with open(pathname, 'w') as f:
+                f.write('{0}\n'.format(self.user_data))
+            LOG.info("user data written to {0}".format(pathname))
+        else:
+            LOG.error("unable to determine salt_id: specify hostname")
 
     def pre_seed_minion(self):
         """Pre-seed minion keys, updating /etc/salt/pki/minion
@@ -242,12 +247,12 @@ class EBSFactory(object):
             return False
         if not self.config['ec2_key_name']:
             # If no key pair has been specified, just use the first one,
-            # iff it's the only one.
+            # if it's the only key pair.  Otherwise the user must specify.
             key_pairs = self.conn.get_all_key_pairs()
             if len(key_pairs) < 1:
                 LOG.error("No key pair available for region: {0}" % self.conn)
             elif len(key_pairs) > 1:
-                errmsg = "Must specify ec2_key_name: {0}" % (
+                errmsg = "Must specify ec2-key or ec2_key_name: {0}".format(
                     ', '.join([kp.name for kp in key_pairs]))
                 LOG.error(errmsg)
                 return False
@@ -273,9 +278,9 @@ class EBSFactory(object):
             '-a', '--ami', dest='ec2_ami_id', metavar='AMI',
             help='Build instance from AMI')
         parser.add_option(
-            '-d', '--distro', dest='distro',
-            metavar='DISTRO', default='',
-            help="Build minion (ubuntu, debian, squeeze, oneiric, etc.)")
+            '--release', dest='release',
+            metavar='UBUNTU_RELEASE', default='',
+            help="Ubuntu release (precise, lucid, etc.)")
         parser.add_option('--ec2-group', dest='ec2_security_group')
         parser.add_option('--ec2-key', dest='ec2_key_name')
         parser.add_option('--ec2-zone', dest='ec2_zone', default='')
@@ -322,6 +327,10 @@ class EBSFactory(object):
             '--minion-pki-dir', dest='minion_pki_dir',
             metavar='PKI_DIR', default=DEFAULT_MINION_PKI_DIR,
             help="Minion PKI_DIR, when pre-seeding minion keys")
+        parser.add_option(
+            '-w', '--write-user-data', dest='write_user_data',
+            action='store_true', default=False,
+            help="Write user-data to USERDATA directory (~/.shaker/userdata)")
         import shaker.log
         parser.add_option('-l',
                 '--log-level',
@@ -333,11 +342,11 @@ class EBSFactory(object):
                 )
         (opts, args) = parser.parse_args()
         if len(args) < 1:
-            if opts.ec2_ami_id or opts.distro:
+            if opts.ec2_ami_id or opts.release:
                 profile = None
             else:
                 print parser.format_help().strip()
-                errmsg = "\nError: Specify shaker profile or EC2 ami or distro"
+                errmsg = "\nError: Specify shaker profile or EC2 ami or Ubuntu release"
                 raise SystemExit(errmsg)
         else:
             profile = args[0]
