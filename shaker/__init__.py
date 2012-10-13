@@ -363,5 +363,7 @@ class EBSFactory(object):
             opts.log_level)
         if opts.ec2_ami_id:
             opts.distro = ''  # mutually exclusive
+        else:
+            opts.distro = opts.release
         LOG.info("shaker invoked with args: {0}".format(', '.join(sys.argv[1:])))
         return opts, config_dir, profile
