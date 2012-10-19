@@ -140,6 +140,32 @@ packaging is backported to other non-LTS distributions.*
 EC2-Specific Configuration Options
 ----------------------------------
 
+``ec2_access_key_id``
+---------------------
+
+Default: None
+
+AWS access key that is used for creating a connection to the service.
+If not given, `boto's defaults <http://docs.pythonboto.org/en/latest/boto_config_tut.html>`
+like ``~/.boto`` or environment variables are used.
+
+.. code-block:: yaml
+
+    ec2_access_key_id: <AWS_ACCESS_KEY_ID>
+
+
+``ec2_secret_access_key``
+-------------------------
+
+Default: None
+
+Use this if you are setting also ec2_access_key_id_ in you profile.
+
+.. code-block:: yaml
+
+    ec2_secret_access_key: <AWS_SECRET_ACCESS_KEY>
+
+
 ``ec2_zone``
 ------------
 

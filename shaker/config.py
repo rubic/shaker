@@ -20,6 +20,8 @@ DEFAULTS = {
     'ssh_import': None,
     'timezone': None,
     'assign_dns': False,  # Hmmm ...?
+    'ec2_access_key_id': None,
+    'ec2_secret_access_key': None,
     'ec2_zone': 'us-east-1',
     'ec2_instance_type': 'm1.small',
     'ec2_ami_id': None,
@@ -199,6 +201,16 @@ DEFAULT_PROFILE = """###########################################################
 ####################################################################
 
 #timezone:
+
+####################################################################
+# aws credentials:
+# you can set up your aws credentials for this profile
+# or you can leave it out and fallback to boto's defaults
+# http://docs.pythonboto.org/en/latest/boto_config_tut.html
+####################################################################
+
+#ec2_access_key_id: <AWS_ACCESS_KEY_ID>
+#ec2_secret_access_key: <AWS_SECRET_ACCESS_KEY>
 
 ####################################################################
 # ec2_zone: if not specified, defaults to arbitrary us-east zone
