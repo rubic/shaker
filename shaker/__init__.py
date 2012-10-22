@@ -83,10 +83,14 @@ class EBSFactory(object):
         return True
 
     def get_connection(self):
-        regions = boto.ec2.regions()
+        conn_params = {
+            'aws_access_key_id': self.config['ec2_access_key_id'],
+            'aws_secret_access_key': self.config['ec2_secret_access_key'],
+        }
+        regions = boto.ec2.regions(**conn_params)
         try:
             region = [x.name for x in regions if self.config['ec2_zone'].startswith(x.name)][0]
-            conn = regions[[x.name for x in regions].index(region)].connect()
+            conn = regions[[x.name for x in regions].index(region)].connect(**conn_params)
         except IndexError:
             errmsg = "Unable to determine region from ec2_zone: {0}".format(
                 self.config['ec2_zone'])
