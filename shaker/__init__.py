@@ -67,7 +67,7 @@ class EBSFactory(object):
         self.conn = self.get_connection()
         if not self.conn:
             errmsg = "Unable to establish a connection for: {0}".format(
-                self.config['ec2_zone'])
+                self.config['ec2_region'])
             LOG.error(errmsg)
             return False
         if not self.verify_settings():
@@ -87,13 +87,11 @@ class EBSFactory(object):
             'aws_access_key_id': self.config['ec2_access_key_id'],
             'aws_secret_access_key': self.config['ec2_secret_access_key'],
         }
-        regions = boto.ec2.regions(**conn_params)
         try:
-            region = [x.name for x in regions if self.config['ec2_zone'].startswith(x.name)][0]
-            conn = regions[[x.name for x in regions].index(region)].connect(**conn_params)
-        except IndexError:
-            errmsg = "Unable to determine region from ec2_zone: {0}".format(
-                self.config['ec2_zone'])
+            conn = boto.ec2.connect_to_region(self.config['ec2_region'], **conn_params)
+        except boto.exception.BotoClientError as e:
+            errmsg = "Unable to connect to the region {0}: {1}".format(
+                    self.config['ec2_region'], e.reason)
             LOG.error(errmsg)
             conn = None
         return conn
@@ -112,6 +110,7 @@ class EBSFactory(object):
             key_name=self.config['ec2_key_name'],
             security_groups=self.config['ec2_security_groups'] or [self.config['ec2_security_group']],
             instance_type=self.config['ec2_instance_type'],
+            placement=self.config['ec2_zone'],
             placement_group=self.config['ec2_placement_group'],
             monitoring_enabled=self.config['ec2_monitoring_enabled'],
             block_device_map=block_map,
@@ -292,7 +291,10 @@ class EBSFactory(object):
             help="Ubuntu release (precise, lucid, etc.)")
         parser.add_option('--ec2-group', dest='ec2_security_group')
         parser.add_option('--ec2-key', dest='ec2_key_name')
-        parser.add_option('--ec2-zone', dest='ec2_zone', default='')
+        parser.add_option('--ec2-region', dest='ec2_region',
+                          help="Region to use: us-east-1, etc.")
+        parser.add_option('--ec2-zone', dest='ec2_zone',
+                          help="Availability zone to use: us-east-1b, etc.")
         parser.add_option('--instance-type', dest='ec2_instance_type',
                           help="One of t1.micro, m1.small, ...")
         parser.add_option('--placement-group', dest='ec2_placement_group')

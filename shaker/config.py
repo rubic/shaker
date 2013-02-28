@@ -22,7 +22,8 @@ DEFAULTS = {
     'assign_dns': False,  # Hmmm ...?
     'ec2_access_key_id': None,
     'ec2_secret_access_key': None,
-    'ec2_zone': 'us-east-1',
+    'ec2_region': 'us-east-1',
+    'ec2_zone': None,
     'ec2_instance_type': 'm1.small',
     'ec2_ami_id': None,
     'ubuntu_release': None,
@@ -213,12 +214,14 @@ DEFAULT_PROFILE = """###########################################################
 #ec2_secret_access_key: <AWS_SECRET_ACCESS_KEY>
 
 ####################################################################
-# ec2_zone: if not specified, defaults to arbitrary us-east zone
-# ec2_placement_group: specific placement (aka zone) of an instance
+# ec2_region: EC2 region - us-east-1 (default), eu-west-1, etc.
+# ec2_zone: if not specified, EC2 chooses a zone for you
+# ec2_placement_group: placement group of an instance with HPC
 ####################################################################
 
+#ec2_region: {{ ec2_region }}
 #ec2_zone: {{ ec2_zone }}
-#ec2_placement_group': {{ ec2_zone }}a
+#ec2_placement_group': {{ ec2_placement_group }}
 
 ####################################################################
 # ec2_instance_type defaults to m1.small
