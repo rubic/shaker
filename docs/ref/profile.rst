@@ -166,18 +166,33 @@ Use this if you are setting also ec2_access_key_id_ in you profile.
     ec2_secret_access_key: <AWS_SECRET_ACCESS_KEY>
 
 
-``ec2_zone``
-------------
+``ec2_region``
+--------------
 
-Default: ``us-east-1``
+Default: us-east-1
 
 Specify the
-`zone <http://aws.amazon.com/ec2/faqs/#How_isolated_are_Availability_Zones_from_one_another>`_
-to start the instance.   The default may be changed in ``~/.shaker/profile/default``.
+`region <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#using-regions-availability-zones-setup>`_
+to use for the instance. The default may be changed in ``~/.shaker/profile/default``.
 
 .. code-block:: yaml
 
-    ec2_zone: us-west-1
+    ec2_zone: eu-west-1
+
+
+``ec2_zone``
+------------
+
+Default: None
+
+Specify the
+`zone <http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#using-regions-availability-zones-launching>`_
+to start the instance in or leave empty for EC2 to choose a zone for you.
+The default may be changed in ``~/.shaker/profile/default``.
+
+.. code-block:: yaml
+
+    ec2_zone: us-west-1a
 
 
 ``ec2_instance_type``
@@ -272,7 +287,7 @@ performance computing.
 
 .. code-block:: yaml
 
-    ec2_placement_group: us-east-1b
+    ec2_placement_group: hpc_cluster
 
 ``ec2_monitoring_enabled``
 --------------------------
