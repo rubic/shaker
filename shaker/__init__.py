@@ -99,12 +99,16 @@ class EBSFactory(object):
     def launch_instance(self):
         if not self.verify_settings():
             return
-        block_map = BlockDeviceMapping()
-        root_device = self.config['ec2_root_device']
-        block_map[root_device] = EBSBlockDeviceType()
-        if self.config['ec2_size']:
-            block_map[root_device].size = self.config['ec2_size']
-        block_map[root_device].delete_on_termination = True
+        is_instance_store = self.conn.get_all_images(self.config['ec2_ami_id'], filters={'root-device-type': 'instance-store'})
+        if is_instance_store:
+            block_map = None
+        else:
+            block_map = BlockDeviceMapping()
+            root_device = self.config['ec2_root_device']
+            block_map[root_device] = EBSBlockDeviceType()
+            if self.config['ec2_size']:
+                block_map[root_device].size = self.config['ec2_size']
+            block_map[root_device].delete_on_termination = True
         reservation = self.conn.run_instances(
             self.config['ec2_ami_id'],
             key_name=self.config['ec2_key_name'],
