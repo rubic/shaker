@@ -323,6 +323,10 @@ class EBSFactory(object):
             metavar='SALT_MASTER', default='',
             help="Connect salt minion to SALT_MASTER")
         parser.add_option(
+            '--roles', dest='salt_roles',
+            metavar='SALT_ROLES', default='',
+            help="Assign SALT_ROLES to salt minion")
+        parser.add_option(
             '--hostname', dest='hostname',
             metavar='HOSTNAME', default='',
             help="Assign HOSTNAME to salt minion")

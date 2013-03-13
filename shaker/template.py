@@ -175,6 +175,13 @@ id: {{ salt_id }}
 {% else %}
 #id:
 {% endif %}
+
+{% if salt_roles %}
+roles:
+  {% for role in salt_roles %}
+  - {{ role }}
+  {% endfor %}
+{% endif %}
 """
 
 # Re-enable this version when bug 996166 is fixed.

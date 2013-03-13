@@ -37,6 +37,7 @@ DEFAULTS = {
     'ec2_placement_group': None,
     'salt_master': None,
     'salt_id': None,
+    'salt_roles': None,
     'cloud_init_template': None,
     'user_data_template': None,
     'minion_template': None,
@@ -132,6 +133,8 @@ def user_profile(cli, config_dir, profile_name=None):
         LOG.info("No profile specified.")
     for k, v in cli.__dict__.items():
         if k in profile and v:
+            if k == 'salt_roles':
+                v = v.split(',')
             profile[k] = v
     # If the distro is specified in the command-line, we override
     # the profile ec2_ami_id value.
@@ -171,6 +174,13 @@ DEFAULT_PROFILE = """###########################################################
 ####################################################################
 
 #salt_id:
+
+####################################################################
+# salt_roles identifies roles on this salt minion.  If not specified,
+# defaults to empty list.
+####################################################################
+
+#salt_roles:
 
 ####################################################################
 # Install the user with sudo privileges.  If sudouser is listed
