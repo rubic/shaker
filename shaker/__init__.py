@@ -140,7 +140,7 @@ class EBSFactory(object):
             LOG.info(msg1)
             print msg1
             p = int(self.config['ssh_port'])
-            port = "-p {0} ".format(p) if p and not p == 22 else ''
+            port = str(p) if p and not p == 22 else ''
             ## change user to 'root' for all non-Ubuntu systems
             user = self.config['sudouser'] if self.config['sudouser'] and self.config['ssh_import'] else 'ubuntu'
             #XXX - TODO: replace public dns with fqdn, where appropriate
