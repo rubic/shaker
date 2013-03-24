@@ -18,7 +18,7 @@ import shaker.config
 import shaker.template
 LOG = shaker.log.getLogger(__name__)
 RUN_INSTANCE_TIMEOUT = 180  # seconds
-DEFAULT_MINION_PKI_DIR = '/etc/salt/pki/minions'
+DEFAULT_MINION_PKI_DIR = '/etc/salt/pki/minion'
 
 InstanceTypes = [
     't1.micro',
