@@ -167,7 +167,7 @@ service salt-minion start
 # When the bug is available in the distro, replace MINION_TEMPLATE
 # with _MINION_TEMPLATE.
 
-_MINION_TEMPLATE = """master: {{ salt_master }}
+MINION_TEMPLATE = """master: {{ salt_master }}
 # Explicitly declare the id for this minion to use, if left commented the
 # id will be the hostname as returned by the python call: socket.getfqdn()
 {% if salt_id %}
@@ -178,7 +178,7 @@ id: {{ salt_id }}
 """
 
 # Re-enable this version when bug 996166 is fixed.
-MINION_TEMPLATE = """
+_MINION_TEMPLATE = """
 salt_minion:
   # conf contains all the directives to be assigned in /etc/salt/minion.
 
