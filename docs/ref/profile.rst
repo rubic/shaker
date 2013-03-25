@@ -37,6 +37,30 @@ specified, defaults to the fully qualified hostname.
 
     salt_id: moonunit
 
+``pre_seed``
+-------------
+
+Default: False
+
+``pre_seed`` seeds the master with a generated salt key, which is
+copied to the minion upon instance creation.
+
+.. code-block:: yaml
+
+    pre_seed: true
+
+``ip_address``
+--------------
+
+Default: None
+
+``ip_address`` assigns an elastic ip address to minion after the
+instance is launched.  If the ip address is already in use, the
+assignment will fail.
+
+.. code-block:: yaml
+
+    ip_address: 111.22.33.44
 
 Host Configuration Options
 --------------------------

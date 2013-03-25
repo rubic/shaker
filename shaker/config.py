@@ -41,6 +41,8 @@ DEFAULTS = {
     'cloud_init_template': None,
     'user_data_template': None,
     'minion_template': None,
+    'pre_seed': False,
+    'ip_address': None
     }
 
 
@@ -188,6 +190,20 @@ DEFAULT_PROFILE = """###########################################################
 ####################################################################
 
 #salt_grains:
+
+# Pre-seed the master with a generated salt key, which is copied
+# to the minion upon instance creation.  Default is false.
+####################################################################
+
+#pre_seed: False
+
+####################################################################
+# Assign elastic ip address to minion after the instance is
+# launched.  If the ip address is already in use, the
+# assignment will fail.  Default is None.
+####################################################################
+
+#ip_address:
 
 ####################################################################
 # Install the user with sudo privileges.  If sudouser is listed
