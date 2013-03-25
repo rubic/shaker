@@ -50,11 +50,11 @@ class EBSFactory(object):
         self.pki_dir = shaker.config.get_pki_dir(config_dir)
         self.userdata_dir = shaker.config.get_userdata_dir(config_dir)
         self.dry_run = cli.dry_run
-        self.pre_seed = cli.pre_seed
         self.write_user_data = cli.write_user_data
         self.minion_pki_dir = cli.minion_pki_dir or DEFAULT_MINION_PKI_DIR
         self.config = dict(self.profile)
         self.config['config_dir'] = config_dir
+        self.pre_seed = cli.pre_seed or self.config['pre_seed']
 
     def process(self):
         if self.pre_seed:

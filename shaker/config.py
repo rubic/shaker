@@ -40,6 +40,7 @@ DEFAULTS = {
     'cloud_init_template': None,
     'user_data_template': None,
     'minion_template': None,
+    'pre_seed': False,
     }
 
 
@@ -171,6 +172,13 @@ DEFAULT_PROFILE = """###########################################################
 ####################################################################
 
 #salt_id:
+
+####################################################################
+# Pre-seed the master with a generated salt key, which is copied
+# to the minion upon instance creation.  Default is false.
+####################################################################
+
+#pre_seed: False
 
 ####################################################################
 # Install the user with sudo privileges.  If sudouser is listed

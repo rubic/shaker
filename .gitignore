@@ -48,6 +48,7 @@ Thumbs.db
 *.sublime-workspace
 .codeintel/*
 .rvmrc
+*_flymake.py
 
 # Django static folder
 static/*
