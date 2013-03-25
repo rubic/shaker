@@ -18,7 +18,7 @@ import shaker.config
 import shaker.template
 LOG = shaker.log.getLogger(__name__)
 RUN_INSTANCE_TIMEOUT = 180  # seconds
-DEFAULT_MINION_PKI_DIR = '/etc/salt/pki/minion'
+DEFAULT_MINION_PKI_DIR = '/etc/salt/pki/master/minions'
 
 InstanceTypes = [
     't1.micro',
@@ -173,7 +173,11 @@ class EBSFactory(object):
             LOG.error(errmsg)
             return False
         keyname = self.get_keyname()
-        #XXX TODO: update /etc/salt/pki/minion
+        minionpubkey_pathname = os.path.join(
+            self.minion_pki_dir,
+            keyname)
+        with open(minionpubkey_pathname, 'w') as f:
+            f.write(self.public_key)
         return True
 
     def get_keyname(self):
