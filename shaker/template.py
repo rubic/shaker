@@ -176,10 +176,13 @@ id: {{ salt_id }}
 #id:
 {% endif %}
 
-{% if salt_roles %}
-roles:
-  {% for role in salt_roles %}
-  - {{ role }}
+{% if salt_grains %}
+grains:
+  {% for grain, grain_options in salt_grains %}
+  {{ grain }}:
+    {% for grain_option in grain_options %}
+    - {{ grain_option }}
+    {% endfor %}
   {% endfor %}
 {% endif %}
 """

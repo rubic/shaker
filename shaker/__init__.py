@@ -323,9 +323,9 @@ class EBSFactory(object):
             metavar='SALT_MASTER', default='',
             help="Connect salt minion to SALT_MASTER")
         parser.add_option(
-            '--roles', dest='salt_roles',
-            metavar='SALT_ROLES', default='',
-            help="Assign SALT_ROLES to salt minion")
+            '--grains', dest='salt_grains',
+            metavar='SALT_GRAINS', default='',
+            help="Assign SALT_GRAINS to salt minion, semicolon separated list of key:value,value2")
         parser.add_option(
             '--hostname', dest='hostname',
             metavar='HOSTNAME', default='',
