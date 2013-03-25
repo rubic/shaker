@@ -38,11 +38,11 @@ specified, defaults to the fully qualified hostname.
     salt_id: moonunit
 
 ``pre_seed``
-------------
+-------------
 
 Default: False
 
-``pre_seed`` seeds the master with a generated salt key (which is
+``pre_seed`` seeds the master with a generated salt key, which is
 copied to the minion upon instance creation.
 
 .. code-block:: yaml
