@@ -55,6 +55,7 @@ class EBSFactory(object):
         self.config = dict(self.profile)
         self.config['config_dir'] = config_dir
         self.pre_seed = cli.pre_seed or self.config['pre_seed']
+        self.ip_address = cli.ip_address or self.config['ip_address']
 
     def process(self):
         if self.pre_seed:
@@ -77,9 +78,21 @@ class EBSFactory(object):
         if self.pre_seed:
             self.pre_seed_minion()
         self.launch_instance()
+        assigned_ip_address = None
+        if self.ip_address:
+            ip_in_use = self.ip_address_in_use()
+            if ip_in_use:
+                errmsg = "Unable to assign ip address {0}, " \
+                         "already in use with instance {1}".format(
+                    self.ip_address, ip_in_use.id)
+                LOG.error(errmsg)
+            else:
+                self.conn.associate_address(self.instance.id, self.ip_address)
+                assigned_ip_address = self.ip_address
         if self.config['assign_dns']:
             LOG.info("assign_dns not yet implemented") #XXX Not yet implemented
             self.assign_dns(self.config['assign_dns'])
+        self.output_response_to_user(assigned_ip_address)
         return True
 
     def get_connection(self):
@@ -136,24 +149,27 @@ class EBSFactory(object):
         else:
             if self.config['hostname']:
                 self.assign_name_tag()
-            msg1 = "Started Instance: {0}\n".format(self.instance.id)
-            LOG.info(msg1)
-            print msg1
-            p = int(self.config['ssh_port'])
-            port = str(p) if p and not p == 22 else ''
-            ## change user to 'root' for all non-Ubuntu systems
-            user = self.config['sudouser'] if self.config['sudouser'] and self.config['ssh_import'] else 'ubuntu'
-            #XXX - TODO: replace public dns with fqdn, where appropriate
-            msg2 = "To access: ssh {0}{1}@{2}\n".format(
-                '-p {0} '.format(port) if port else '',
-                user,
-                self.instance.public_dns_name)
-            msg3 = "To terminate: shaker-terminate {0}".format(
-                       self.instance.id)
-            LOG.info(msg2)
-            LOG.info(msg3)
-            print msg2
-            print msg3
+
+    def output_response_to_user(self, assigned_ip_address):
+        msg1 = "Started Instance: {0}\n".format(self.instance.id)
+        LOG.info(msg1)
+        print msg1
+        p = int(self.config['ssh_port'])
+        port = str(p) if p and not p == 22 else ''
+        ## change user to 'root' for all non-Ubuntu systems
+        user = self.config['sudouser'] if self.config['sudouser'] and self.config['ssh_import'] else 'ubuntu'
+        address = assigned_ip_address if assigned_ip_address else self.instance.public_dns_name
+        # TODO: replace public dns with fqdn, where appropriate
+        msg2 = "To access: ssh {0}{1}@{2}\n".format(
+            '-p {0} '.format(port) if port else '',
+            user,
+            address)
+        msg3 = "To terminate: shaker-terminate {0}".format(
+                   self.instance.id)
+        LOG.info(msg2)
+        LOG.info(msg3)
+        print msg2
+        print msg3
 
     def write_user_data_to_file(self):
         keyname = self.get_keyname()
@@ -193,6 +209,16 @@ class EBSFactory(object):
         else:
             keyname = None
         return keyname
+
+    def ip_address_in_use(self):
+        """If the ip_address is in use, return associated instance,
+        otherwise return None.
+        """
+        for instances in [r.instances for r in self.conn.get_all_instances()]:
+            for i in instances:
+                if i.ip_address == self.ip_address and i.state == 'running':
+                    return i
+        return None
 
     def generate_minion_keys(self):
         #XXX TODO: Replace M2Crypto with PyCrypto
@@ -334,6 +360,10 @@ class EBSFactory(object):
             '--domain', dest='domain',
             metavar='DOMAIN', default='',
             help="Assign DOMAIN name to salt minion")
+        parser.add_option(
+            '--ip_address', dest='ip_address',
+            metavar='IP_ADDRESS', default='',
+            help="Assign elastic IP address to salt minion")
         parser.add_option(
             '--preseed', dest='pre_seed',
             action='store_true', default=False,
