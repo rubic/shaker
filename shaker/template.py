@@ -181,7 +181,7 @@ grains:
   {% for grain in salt_grains %}
   {{ grain }}:
      {% if salt_grains[grain] is string %}
-     - {{ salt_grains[grain] }}
+     {{ salt_grains[grain] }}
      {% else %}
        {% for val in  salt_grains[grain] %}
        - {{ val }}
