@@ -178,11 +178,15 @@ id: {{ salt_id }}
 
 {% if salt_grains %}
 grains:
-  {% for grain, grain_options in salt_grains %}
+  {% for grain in salt_grains %}
   {{ grain }}:
-    {% for grain_option in grain_options %}
-    - {{ grain_option }}
-    {% endfor %}
+     {% if salt_grains[grain] is string %}
+     - {{ salt_grains[grain] }}
+     {% else %}
+       {% for val in  salt_grains[grain] %}
+       - {{ val }}
+       {% endfor %}
+     {% endif %}
   {% endfor %}
 {% endif %}
 """
@@ -217,3 +221,4 @@ salt_minion:
 {{ formatted_private_key }}
 {% endif %}
 """
+
