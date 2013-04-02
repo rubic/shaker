@@ -26,7 +26,7 @@ Specify the location of a running Salt master.
     salt_master: salt.example.com
 
 ``salt_id``
-------------
+-----------
 
 Default: ``hostname``  (fully-qualified)
 
@@ -36,6 +36,21 @@ specified, defaults to the fully qualified hostname.
 .. code-block:: yaml
 
     salt_id: moonunit
+
+``salt_grains``
+---------------
+
+Default: None
+
+Specify the `salt grains <http://docs.saltstack.com/topics/targeting/grains.html>`_ for the minion.
+
+.. code-block:: yaml
+
+    salt_grains:
+        roles:
+            - webserver
+            - memcache
+        deployment: datacenter4
 
 ``pre_seed``
 -------------
@@ -49,6 +64,9 @@ copied to the minion upon instance creation.
 
     pre_seed: true
 
+Host Configuration Options
+--------------------------
+
 ``ip_address``
 --------------
 
@@ -61,9 +79,6 @@ assignment will fail.
 .. code-block:: yaml
 
     ip_address: 111.22.33.44
-
-Host Configuration Options
---------------------------
 
 ``hostname``
 -------------
