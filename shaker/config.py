@@ -202,7 +202,7 @@ DEFAULT_PROFILE = """###########################################################
 # If not specified, defaults to none and pillar_roots aren't set.
 ####################################################################
 
-#salt_pillar_roots_dir:
+#salt_pillar_roots_dir: /srv/pillar
 
 # Pre-seed the master with a generated salt key, which is copied
 # to the minion upon instance creation.  Default is false.
