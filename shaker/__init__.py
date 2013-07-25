@@ -357,6 +357,11 @@ class EBSFactory(object):
             metavar='SALT_GRAINS', default='',
             help="Assign SALT_GRAINS to salt minion, semicolon separated list of key:value,value2")
         parser.add_option(
+            '--pillar_roots', dest='salt_pillar_roots_dir',
+            metavar='SALT_PILLAR_ROOTS', default='',
+            help="Assign SALT_PILLAR_ROOTS to salt minion, path as string")
+        
+        parser.add_option(
             '--hostname', dest='hostname',
             metavar='HOSTNAME', default='',
             help="Assign HOSTNAME to salt minion")
