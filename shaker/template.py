@@ -189,6 +189,12 @@ grains:
      {% endif %}
   {% endfor %}
 {% endif %}
+
+{% if salt_pillar_roots_dir %}
+pillar_roots:
+  base:
+    - {{ salt_pillar_roots_dir }}
+{% endif %}
 """
 
 # Re-enable this version when bug 996166 is fixed.

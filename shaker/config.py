@@ -38,6 +38,7 @@ DEFAULTS = {
     'salt_master': None,
     'salt_id': None,
     'salt_grains': [],
+    'salt_pillar_roots_dir': None,
     'cloud_init_template': None,
     'user_data_template': None,
     'minion_template': None,
@@ -156,10 +157,14 @@ def user_profile(cli, config_dir, profile_name=None):
     # profile grains value
     if cli.salt_grains:
         grains = {}
-        for pair in clie.salt_grains.split(';'):
+        for pair in cli.salt_grains.split(';'):
             for key, value in pair.split(':'):
                 grains[key] = value.split(',')
         profile['salt_grains'] = grains
+
+    ## override profile pillar_roots_dir by cli
+    if cli.salt_pillar_roots_dir:
+        profile['salt_pillar_roots_dir'] = cli.salt_pillar_roots_dir
     return profile
 
 
@@ -190,6 +195,14 @@ DEFAULT_PROFILE = """###########################################################
 ####################################################################
 
 #salt_grains:
+
+####################################################################
+# salt_pillar_roots_dir identifies pillar_roots config on this
+# salt minion.
+# If not specified, defaults to none and pillar_roots aren't set.
+####################################################################
+
+#salt_pillar_roots_dir:
 
 # Pre-seed the master with a generated salt key, which is copied
 # to the minion upon instance creation.  Default is false.
