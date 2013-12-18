@@ -57,6 +57,8 @@ class EBSFactory(object):
         self.pre_seed = cli.pre_seed or self.config['pre_seed']
         self.ip_address = cli.ip_address or self.config['ip_address']
         self.tags = {}
+        self.check_name_before_create = False
+        self.check_name_after_create = True
 
     def process(self):
         if self.pre_seed:
@@ -110,8 +112,15 @@ class EBSFactory(object):
             conn = None
         return conn
 
-    def launch_instance(self):
+    def verify(self):
         if not self.verify_settings():
+            return False
+        if self.check_name_before_create and self.running_host_with_same_tag():
+            return False
+        return True
+
+    def launch_instance(self):
+        if not self.verify():
             return
         is_instance_store = self.conn.get_all_images(self.config['ec2_ami_id'], filters={'root-device-type': 'instance-store'})
         if is_instance_store:
@@ -264,15 +273,21 @@ class EBSFactory(object):
             "    {0}".format(k) for k in self.private_key.split('\n'))
         return True
 
+    def running_host_with_same_tag(self):
+        tag = self.config['hostname']
+        for reservation in self.conn.get_all_instances():
+            for i in reservation.instances:
+                if tag == i.tags.get('Name'):
+                    return True
+        return False
+
     def assign_name_tag(self):
         """Assign the 'Name' tag to the instance, but only if it
         isn't already in use.
         """
+        if self.check_name_after_create and self.running_host_with_same_tag():
+            return
         tag = self.config['hostname']
-        for reservation in self.conn.get_all_instances():
-                for i in reservation.instances:
-                    if tag == i.tags.get('Name'):
-                        return
         self.instance.add_tag('Name', tag)
 
     def build_mime_multipart(self):
