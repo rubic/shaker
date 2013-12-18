@@ -56,6 +56,7 @@ class EBSFactory(object):
         self.config['config_dir'] = config_dir
         self.pre_seed = cli.pre_seed or self.config['pre_seed']
         self.ip_address = cli.ip_address or self.config['ip_address']
+        self.tags = {}
 
     def process(self):
         if self.pre_seed:
@@ -133,6 +134,7 @@ class EBSFactory(object):
             block_device_map=block_map,
             user_data=self.user_data)
         self.instance = reservation.instances[0]
+        self.add_tags(self.instance)
         secs = RUN_INSTANCE_TIMEOUT
         rest_interval = 5
         while secs and not self.instance.state == 'running':
@@ -146,9 +148,12 @@ class EBSFactory(object):
             errmsg = "run instance {0} failed after {1} seconds".format(
                 self.instance.id, RUN_INSTANCE_TIMEOUT)
             LOG.error(errmsg)
-        else:
-            if self.config['hostname']:
-                self.assign_name_tag()
+
+    def add_tags(self, instance):
+        if self.config['hostname']:
+            self.assign_name_tag()
+        for name, tag in self.tags.items():
+            instance.add_tag(name, tag)
 
     def output_response_to_user(self, assigned_ip_address):
         msg1 = "Started Instance: {0}\n".format(self.instance.id)
