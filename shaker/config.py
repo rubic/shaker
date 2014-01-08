@@ -43,7 +43,9 @@ DEFAULTS = {
     'user_data_template': None,
     'minion_template': None,
     'pre_seed': False,
-    'ip_address': None
+    'ip_address': None,
+    'check_name_before_create': False,
+    'check_name_after_create': True,
     }
 
 
@@ -217,6 +219,14 @@ DEFAULT_PROFILE = """###########################################################
 ####################################################################
 
 #ip_address:
+
+####################################################################
+# Check whether there is box with the same Name. Either let it ends
+# before the instance is created or leave the instance without Name
+####################################################################
+
+#check_name_before_create: False
+#check_name_after_create: True
 
 ####################################################################
 # Install the user with sudo privileges.  If sudouser is listed

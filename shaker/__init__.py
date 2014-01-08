@@ -57,8 +57,8 @@ class EBSFactory(object):
         self.pre_seed = cli.pre_seed or self.config['pre_seed']
         self.ip_address = cli.ip_address or self.config['ip_address']
         self.tags = {}
-        self.check_name_before_create = False
-        self.check_name_after_create = True
+        self.check_name_before_create = self.config['check_name_before_create']
+        self.check_name_after_create = self.config['check_name_after_create']
 
     def process(self):
         if self.pre_seed:

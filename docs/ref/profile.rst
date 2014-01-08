@@ -176,6 +176,17 @@ packaging is backported to other non-LTS distributions.*
 
     ubuntu_release: lucid
 
+``check_name_before_create``
+----------------------------
+
+If a box with the same Name tag exists, do not attempt to create another one.
+
+``check_name_after_create``
+---------------------------
+
+If a box with the same Name tag exists, leave your with none.
+
+
 EC2-Specific Configuration Options
 ----------------------------------
 
