@@ -56,6 +56,9 @@ class EBSFactory(object):
         self.config['config_dir'] = config_dir
         self.pre_seed = cli.pre_seed or self.config['pre_seed']
         self.ip_address = cli.ip_address or self.config['ip_address']
+        self.additional_tags = self.config['additional_tags']
+        self.check_name_before_create = self.config['check_name_before_create']
+        self.check_name_after_create = self.config['check_name_after_create']
 
     def process(self):
         if self.pre_seed:
@@ -109,8 +112,15 @@ class EBSFactory(object):
             conn = None
         return conn
 
-    def launch_instance(self):
+    def verify(self):
         if not self.verify_settings():
+            return False
+        if self.check_name_before_create and self.running_host_with_same_tag():
+            return False
+        return True
+
+    def launch_instance(self):
+        if not self.verify():
             return
         is_instance_store = self.conn.get_all_images(self.config['ec2_ami_id'], filters={'root-device-type': 'instance-store'})
         if is_instance_store:
@@ -133,6 +143,7 @@ class EBSFactory(object):
             block_device_map=block_map,
             user_data=self.user_data)
         self.instance = reservation.instances[0]
+        self.add_tags(self.instance)
         secs = RUN_INSTANCE_TIMEOUT
         rest_interval = 5
         while secs and not self.instance.state == 'running':
@@ -146,9 +157,12 @@ class EBSFactory(object):
             errmsg = "run instance {0} failed after {1} seconds".format(
                 self.instance.id, RUN_INSTANCE_TIMEOUT)
             LOG.error(errmsg)
-        else:
-            if self.config['hostname']:
-                self.assign_name_tag()
+
+    def add_tags(self, instance):
+        if self.config['hostname']:
+            self.assign_name_tag()
+        for name, tag in self.additional_tags.items():
+            instance.add_tag(name, tag)
 
     def output_response_to_user(self, assigned_ip_address):
         msg1 = "Started Instance: {0}\n".format(self.instance.id)
@@ -259,15 +273,21 @@ class EBSFactory(object):
             "    {0}".format(k) for k in self.private_key.split('\n'))
         return True
 
+    def running_host_with_same_tag(self):
+        tag = self.config['hostname']
+        for reservation in self.conn.get_all_instances():
+            for i in reservation.instances:
+                if tag == i.tags.get('Name'):
+                    return True
+        return False
+
     def assign_name_tag(self):
         """Assign the 'Name' tag to the instance, but only if it
         isn't already in use.
         """
+        if self.check_name_after_create and self.running_host_with_same_tag():
+            return
         tag = self.config['hostname']
-        for reservation in self.conn.get_all_instances():
-                for i in reservation.instances:
-                    if tag == i.tags.get('Name'):
-                        return
         self.instance.add_tag('Name', tag)
 
     def build_mime_multipart(self):

@@ -176,6 +176,35 @@ packaging is backported to other non-LTS distributions.*
 
     ubuntu_release: lucid
 
+``check_name_before_create``
+----------------------------
+
+If a box with the same Name tag exists, do not attempt to create another one.
+
+.. code-block:: yaml
+
+    check_name_before_create: False
+
+``check_name_after_create``
+---------------------------
+
+If a box with the same Name tag exists, leave your with none.
+
+.. code-block:: yaml
+
+    check_name_after_create: True
+
+``additional_tags``
+---------------------------
+
+You can add any custom AWS tags you want.
+
+.. code-block:: yaml
+
+    additional_tags:
+      project: homepage
+      environment: production
+
 EC2-Specific Configuration Options
 ----------------------------------
 
