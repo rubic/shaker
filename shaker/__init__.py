@@ -56,7 +56,7 @@ class EBSFactory(object):
         self.config['config_dir'] = config_dir
         self.pre_seed = cli.pre_seed or self.config['pre_seed']
         self.ip_address = cli.ip_address or self.config['ip_address']
-        self.tags = {}
+        self.additional_tags = self.config['additional_tags']
         self.check_name_before_create = self.config['check_name_before_create']
         self.check_name_after_create = self.config['check_name_after_create']
 
@@ -161,7 +161,7 @@ class EBSFactory(object):
     def add_tags(self, instance):
         if self.config['hostname']:
             self.assign_name_tag()
-        for name, tag in self.tags.items():
+        for name, tag in self.additional_tags.items():
             instance.add_tag(name, tag)
 
     def output_response_to_user(self, assigned_ip_address):

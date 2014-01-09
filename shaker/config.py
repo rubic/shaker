@@ -46,6 +46,7 @@ DEFAULTS = {
     'ip_address': None,
     'check_name_before_create': False,
     'check_name_after_create': True,
+    'additional_tags': {},
     }
 
 
@@ -227,6 +228,14 @@ DEFAULT_PROFILE = """###########################################################
 
 #check_name_before_create: False
 #check_name_after_create: True
+
+####################################################################
+# You can add any custom AWS tags you want
+####################################################################
+
+#additional_tags:
+#  project: homepage
+#  environment: production
 
 ####################################################################
 # Install the user with sudo privileges.  If sudouser is listed
