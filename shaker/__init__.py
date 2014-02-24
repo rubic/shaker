@@ -20,21 +20,37 @@ LOG = shaker.log.getLogger(__name__)
 RUN_INSTANCE_TIMEOUT = 180  # seconds
 DEFAULT_MINION_PKI_DIR = '/etc/salt/pki/master/minions'
 
+# table takne from http://aws.amazon.com/ec2/instance-types/
 InstanceTypes = [
-    't1.micro',
+    'm3.medium',
+    'm3.large',
+    'm3.xlarge',
+    'm3.2xlarge',
     'm1.small',
     'm1.medium',
     'm1.large',
     'm1.xlarge',
+    'c3.large',
+    'c3.xlarge',
+    'c3.2xlarge',
+    'c3.4xlarge',
+    'c3.8xlarge',
+    'c1.medium',
+    'c1.xlarge',
+    'cc2.8xlarge',
+    'g2.2xlarge',
+    'cg1.4xlarge',
     'm2.xlarge',
     'm2.2xlarge',
     'm2.4xlarge',
-    'c1.medium',
-    'c1.xlarge',
-    'cc1.4xlarge',
-    'cc2.8xlarge',
-    'cg1.4xlarge',
+    'cr1.8xlarge',
+    'i2.xlarge',
+    'i2.2xlarge',
+    'i2.4xlarge',
+    'i2.8xlarge',
+    'hs1.8xlarge',
     'hi1.4xlarge',
+    't1.micro',
     ]
 
 
