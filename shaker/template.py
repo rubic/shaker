@@ -15,6 +15,7 @@ LOG = shaker.log.getLogger(__name__)
 
 CLOUD_INIT_PREFIX = 'cloud-init'
 USER_SCRIPT_PREFIX = 'user-script'
+BOOTHOOK_SCRIPT_PREFIX = 'boothook-script'
 
 
 class UserData(object):
@@ -26,6 +27,7 @@ class UserData(object):
         minion_template = re.sub('\n\n+', '\n\n', self.render_template('minion_template', default_contents=MINION_TEMPLATE))
         self.config['rendered_minion_template'] = minion_template
         self.user_script = re.sub('\n\n+', '\n\n', self.render_template('user_data_template', default_contents=USER_SCRIPT))
+        self.boothook_script = re.sub('\n\n+', '\n\n', self.render_template('boothook_template', default_contents=BOOTHOOK_SCRIPT))
         self.cloud_init = re.sub('\n\n+', '\n\n', self.render_template('cloud_init_template', default_contents=CLOUD_INIT))
 
     def get_jinja_env(self):
@@ -41,6 +43,7 @@ class UserData(object):
         prefixes = {
             'cloud_init_template': CLOUD_INIT_PREFIX,
             'user_data_template': USER_SCRIPT_PREFIX,
+            'boothook_template': BOOTHOOK_SCRIPT_PREFIX,
             'minion_template': 'minion-template'
         }
         prefix = prefixes[template_arg]
@@ -93,6 +96,15 @@ fqdn: {{ hostname }}.{{ domain }}
 {{ rendered_minion_template }}
 """
 
+BOOTHOOK_SCRIPT = """#!/bin/sh
+# Change ssh port number in boothook, if needed.
+{% if ssh_port and ssh_port != '22' %}
+# change ssh port 22 to non-standard port and restart sshd
+sed -i "s/^Port 22$/Port {{ ssh_port }}/" /etc/ssh/sshd_config
+/etc/init.d/ssh restart
+{% endif %}
+"""
+
 USER_SCRIPT = """#!/bin/sh
 # Shaker version: {{ version }}
 {% if timezone %}
@@ -108,12 +120,6 @@ sed -i "s/127.0.0.1 ubuntu/127.0.0.1 localhost {{ hostname }}.{{ domain }} {{ ho
 echo "127.0.0.1 localhost {{ hostname }}.{{ domain }} {{ hostname }}" >> /etc/hosts
 {% elif hostname %}
   hostname: {{ hostname }}
-{% endif %}
-
-{% if ssh_port and ssh_port != '22' %}
-# change ssh port 22 to non-standard port and restart sshd
-sed -i "s/^Port 22$/Port {{ ssh_port }}/" /etc/ssh/sshd_config
-/etc/init.d/ssh restart
 {% endif %}
 
 {% if sudouser %}

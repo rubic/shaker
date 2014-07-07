@@ -41,6 +41,7 @@ DEFAULTS = {
     'salt_pillar_roots_dir': None,
     'cloud_init_template': None,
     'user_data_template': None,
+    'boothook_template': None,
     'minion_template': None,
     'pre_seed': False,
     'ip_address': None,

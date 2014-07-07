@@ -311,7 +311,8 @@ class EBSFactory(object):
         outer = email.mime.multipart.MIMEMultipart()
         for content, subtype, filename in [
             (userData.user_script, 'x-shellscript', 'user-script.txt'),
-            (userData.cloud_init, 'cloud-config', 'cloud-config.txt'),]:
+            (userData.cloud_init, 'cloud-config', 'cloud-config.txt'),
+            (userData.boothook_script, 'cloud-boothook', 'boothook-script.txt'),]:
             msg = email.mime.text.MIMEText(content, _subtype=subtype)
             msg.add_header('Content-Disposition',
                            'attachment',
@@ -380,6 +381,9 @@ class EBSFactory(object):
         parser.add_option(
             '--minion-template', dest='minion_template',
             help="Minion template file")
+        parser.add_option(
+            '--boothook-template', dest='boothook_template',
+            help="Boothook template file")
         parser.add_option(
             '--dry-run', dest='dry_run',
             action='store_true', default=False,
