@@ -51,6 +51,7 @@ InstanceTypes = [
     'hs1.8xlarge',
     'hi1.4xlarge',
     't1.micro',
+    't2.medium',
     ]
 
 
